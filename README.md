@@ -10,14 +10,18 @@ Please note the starter code was "stolen" from https://github.com/janishutz/Musi
 
 ## Development
 ### Getting Started with WebDev
-Learning Vue:
-- [Official Docs](https://vuejs.org/guide/introduction.html)
-- Docs here
+Learning Vue & Vuetify (learning the basics of Vue should suffice to be able to use Vuetify):
+- [Vuetify Docs](https://vuetifyjs.com)
+- [Vue Docs](https://vuejs.org/guide/introduction.html)
+- [Guide in reporting repo](https://github.com/studyphoenix/reporting/blob/main/DOCS.md)
+- [Icons](https://vuetifyjs.com/en/components/icons/)
+- This README
 - [MDN Docs](https://developer.mozilla.org/en-US/)
 - [MusicPlayer](https://github.com/janishutz/MusicPlayer/tree/dev/web) by @janishutz (as a reference for implementation)
 - [EYE-TAP frontend](https://github.com/eye-tap/frontend) (as a reference for implementation)
 - Any other docs online
-- [FontAwesome](https://fontawesome.com/search?ic=free-collection)
+
+We may add fontawesome icons if you prefer them over the Material Design Icons.
 
 
 ### Linter and type checker runs on PRs
