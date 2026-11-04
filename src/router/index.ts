@@ -12,7 +12,7 @@ const router = createRouter( {
         {
             'path': '/',
             'name': 'home',
-            'component': () => import( '@/views/StartPage.vue' ),
+            'component': () => import( '@/pages/StartPage.vue' ),
             'meta': {
                 'title': 'Home',
                 'auth': false
@@ -21,7 +21,7 @@ const router = createRouter( {
         {
             'path': '/app',
             'name': 'app',
-            'component': () => import( '@/views/AppView.vue' ),
+            'component': () => import( '@/pages/AppPage.vue' ),
             'meta': {
                 'title': 'App',
                 'auth': true
