@@ -1,23 +1,14 @@
-/**
- * main.ts
- *
- * Bootstraps Vuetify and other plugins then mounts the App`
- */
+import 'unfonts.css';
+import App from './App.vue';
+import {
+    createApp
+} from 'vue';
+import {
+    registerPlugins
+} from '@/plugins';
 
-// Composables
-import { createApp } from 'vue'
+const app = createApp( App );
 
-// Plugins
-import { registerPlugins } from '@/plugins'
+registerPlugins( app );
 
-// Components
-import App from './App.vue'
-
-// Styles
-import 'unfonts.css'
-
-const app = createApp(App)
-
-registerPlugins(app)
-
-app.mount('#app')
+app.mount( '#app' );

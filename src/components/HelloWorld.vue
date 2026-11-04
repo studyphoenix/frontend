@@ -78,7 +78,8 @@
 
                         <template #subtitle>
                             <div class="text-body-large">
-                                Change this page by updating <v-kbd>{{ `<HelloWorld />` }}</v-kbd> in <v-kbd>components/HelloWorld.vue</v-kbd>.
+                                Change this page by updating <v-kbd>{{ `<HelloWorld />` }}</v-kbd>
+                                in <v-kbd>components/HelloWorld.vue</v-kbd>.
                             </div>
                         </template>
                     </v-card>
