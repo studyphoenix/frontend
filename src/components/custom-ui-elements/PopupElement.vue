@@ -39,7 +39,7 @@
             width: 100vw;
             height: 100vh;
             position: absolute;
-            background-color: var( --theme-shadow );
+            background-color: rgba(0, 0, 0, 0.7);
             top: 0;
             left: 0;
             overflow: hidden;
@@ -51,8 +51,8 @@
             height: fit-content;
             max-width: 90%;
             max-height: 90%;
-            background-color: var( --theme-app );
-            color: var( --theme-on-app );
+            background-color: white;
+            color: black;
             padding: 2.5%;
             border-radius: 20px;
             transform: scale(1);

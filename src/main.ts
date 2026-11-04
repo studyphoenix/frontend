@@ -1,37 +1,23 @@
-import '@fortawesome/fontawesome-free/css/all.css';
-import App from './App.vue';
-import Notifications from '@kyvg/vue3-notification';
-import {
-    configure
-} from '@janishutz/oidc-login-sdk-browser';
-import {
-    createApp
-} from 'vue';
-import {
-    createPinia
-} from 'pinia';
-import router from './router';
+/**
+ * main.ts
+ *
+ * Bootstraps Vuetify and other plugins then mounts the App`
+ */
 
-// Detect backend URL
-let backendURL: string;
+// Composables
+import { createApp } from 'vue'
 
-if ( import.meta.env.PROD ) {
-    backendURL = import.meta.env.VITE_BACKEND_URL ?? ( location.protocol + '//api.' + location.host );
-} else {
-    console.warn( '[BACKEND] Development backend enabled' );
-    backendURL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080';
-}
+// Plugins
+import { registerPlugins } from '@/plugins'
 
-configure( {
-    'backendURL': new URL( backendURL ),
-    'defaultAuthErrorResolution': 'resolve',
-    'authErrorEvent': 'autherror'
-} );
+// Components
+import App from './App.vue'
 
-const app = createApp( App );
+// Styles
+import 'unfonts.css'
 
-app.use( createPinia() );
-app.use( router );
-app.use( Notifications );
+const app = createApp(App)
 
-app.mount( '#app' );
+registerPlugins(app)
+
+app.mount('#app')

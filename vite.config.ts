@@ -2,31 +2,66 @@ import {
     URL,
     fileURLToPath
 } from 'node:url';
+import Vuetify, {
+    transformAssetUrls
+} from 'vite-plugin-vuetify';
+import Fonts from 'unplugin-fonts/vite';
+import Vue from '@vitejs/plugin-vue';
 import {
     defineConfig
 } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import vueDevTools from 'vite-plugin-vue-devtools';
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig( {
     'plugins': [
-        vue(),
-        vueDevTools()
-    ],
-    'css': {
-        'preprocessorOptions': {
-            'scss': {
-                'additionalData': `
-@use "@/scss/main.scss" as *;
-`
+        Vue( {
+            'template': {
+                transformAssetUrls
             }
-        }
+        } ),
+        // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
+        Vuetify( {
+            'autoImport': true,
+            'styles': {
+                'configFile': 'src/styles/settings.scss'
+            }
+        } ),
+        Fonts( {
+            'fontsource': {
+                'families': [ {
+                    'name': 'Roboto',
+                    'weights': [
+                        100,
+                        300,
+                        400,
+                        500,
+                        700,
+                        900
+                    ],
+                    'styles': [
+                        'normal',
+                        'italic'
+                    ]
+                } ]
+            }
+        } )
+    ],
+    'define': {
+        'process.env': {}
     },
     'resolve': {
         'alias': {
-            '@': fileURLToPath( new URL( './src', import.meta.url ) )
-        }
+            '@': fileURLToPath( new URL( 'src', import.meta.url ) )
+        },
+        'extensions': [
+            '.js',
+            '.json',
+            '.jsx',
+            '.mjs',
+            '.ts',
+            '.tsx',
+            '.vue'
+        ]
     },
     'server': {
         'port': 8081
