@@ -14,13 +14,19 @@ export interface ControllerCreateAssetRequest {
    * @maxLength 250
    * @example "fa-gear"
    */
-    'icon'?: string;
+    'icon': string;
+    /**
+   * The mediatype (formerly MIME type) of the asset. Will block replacement with asset of another type
+   * @maxLength 250
+   * @example "application/json"
+   */
+    'mediaType': string;
     /**
    * @minLength 3
    * @maxLength 250
    * @example "Analysis"
    */
-    'name'?: string;
+    'name': string;
 }
 
 export interface ControllerCreateChatRequest {
@@ -30,13 +36,13 @@ export interface ControllerCreateChatRequest {
    * @maxLength 250
    * @example "fa-gear"
    */
-    'icon'?: string;
+    'icon': string;
     /**
    * @minLength 3
    * @maxLength 250
    * @example "Analysis"
    */
-    'name'?: string;
+    'name': string;
 }
 
 export interface ControllerCreateFlashcardRequest {
@@ -46,13 +52,13 @@ export interface ControllerCreateFlashcardRequest {
    * @maxLength 250
    * @example "fa-gear"
    */
-    'icon'?: string;
+    'icon': string;
     /**
    * @minLength 3
    * @maxLength 250
    * @example "Analysis"
    */
-    'name'?: string;
+    'name': string;
 }
 
 export interface ControllerCreateSubjectRequest {
@@ -62,13 +68,13 @@ export interface ControllerCreateSubjectRequest {
    * @maxLength 250
    * @example "fa-gear"
    */
-    'icon'?: string;
+    'icon': string;
     /**
    * @minLength 3
    * @maxLength 250
    * @example "Analysis"
    */
-    'name'?: string;
+    'name': string;
 }
 
 export interface ControllerCreateSubtopicRequest {
@@ -78,13 +84,13 @@ export interface ControllerCreateSubtopicRequest {
    * @maxLength 250
    * @example "fa-gear"
    */
-    'icon'?: string;
+    'icon': string;
     /**
    * @minLength 3
    * @maxLength 250
    * @example "Analysis"
    */
-    'name'?: string;
+    'name': string;
 }
 
 export interface ControllerUpdateAssetRequest {
@@ -169,63 +175,86 @@ export interface ControllerUpdateSubtopicRequest {
 
 export interface ControllerUserProfileResponse {
     /** @example "My Nice Username" */
-    'username'?: string;
+    'username': string;
 }
 
 export interface HttputilHTTPError {
     /** @example 500 */
-    'code'?: number;
+    'code': number;
     /** @example "Error processing data due to db issue" */
-    'message'?: string;
+    'message': string;
 }
 
 export interface ModelAsset {
-    'id'?: number;
+    /** @example "fa-gear" */
+    'icon': string;
+    'id': number;
     /** @example "application/pdf" */
-    'mediaType'?: string;
+    'mediaType': string;
     /** @example "2027-01-01T00:00:00Z" */
-    'updatedAt'?: string;
+    'updatedAt': string;
 }
 
 export interface ModelChat {
-    'chatMessages'?: ModelChatMessage[];
+    'chatMessages': ModelChatMessage[];
     /** @example 1 */
-    'id'?: number;
+    'id': number;
     /**
    * the mode to be used for the UI
    * @example 0
    */
-    'mode'?: number;
+    'mode': 1 | 2 | 3;
     /** @example "My nice chat name" */
-    'name'?: string;
+    'name': string;
     /**
    * The id of the subtopic it belongs to
    * @example 0
    */
-    'subtopicId'?: number;
+    'subtopicId': number;
     /** @example "2026-12-31T08:32:08Z" */
-    'updatedAt'?: string;
+    'updatedAt': string;
 }
 
 export interface ModelChatMessage {
     /** @example 1 */
-    'chatId'?: number;
+    'chatId': number;
     /** @example "2026-12-31T08:32:08Z" */
-    'createdAt'?: string;
+    'createdAt': string;
     /** @example "2026-12-31T08:34:12Z" */
     'editedAt'?: string;
     /** @example 10 */
-    'id'?: number;
+    'id': number;
     /** @example "Certianly! This..." */
-    'modelMessage'?: string;
+    'modelMessage': string;
     /** @example "Explain why ..." */
-    'userMessage'?: string;
+    'userMessage': string;
 }
 
 export interface ModelFlashcard {
-    'id'?: number;
+    'content': string;
+    'id': number;
+    'name': string;
+    /** @example "2026-12-17T13:47:33Z" */
+    'updatedAt': string;
 }
 
-export type ModelSubject = object;
+export interface ModelSubject {
+    'assets'?: ModelAsset[];
+    'id': number;
+    /** @example "Analysis" */
+    'name': string;
+    /** @example "2026-12-17T13:47:33Z" */
+    'updatedAt': string;
+}
 
-export type ModelSubtopic = object;
+export interface ModelSubtopic {
+    'assets'?: ModelAsset[];
+    'chats'?: ModelChat[];
+    'flashcards'?: ModelFlashcard[];
+    'id': number;
+    /** @example "ordinary differential equations" */
+    'name': string;
+    'subtopics'?: ModelSubtopic[];
+    /** @example "2026-12-17T13:47:33Z" */
+    'updatedAt': string;
+}

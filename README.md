@@ -24,6 +24,13 @@ Learning Vue & Vuetify (learning the basics of Vue should suffice to be able to 
 We may add fontawesome icons if you prefer them over the Material Design Icons.
 
 
+### Generating types
+Simply run the provided script either locally (if you have `npx` installed and feel comfortable installing an `npm` package locally) or in a docker container.
+
+The script (`./generate-types.sh`) can be run without args (it will download the type defs from GitHub)
+or with an argument (that argument being the URL of a running instance of the backend)
+
+
 ### Linter and type checker runs on PRs
 To keep the code style consistent, on every pull request, a GitHub action will run formatting your code if you haven't done so already.
 It will also run a type check and ***NO PR WITH FAILING TESTS*** will be merged (into `main`).
