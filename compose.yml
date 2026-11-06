@@ -8,7 +8,7 @@ services:
     volumes:
       - .:/mnt
   backend:
-    image: ghcr.io/hci-group-15/backend
+    image: ghcr.io/studyphoenix/backend
     container_name: backend
     restart: on-failure
     ports:
