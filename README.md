@@ -6,8 +6,6 @@
 > [!WARNING]
 > Before you get started, I ***STRONGLY*** recommend you read through this readme carefully.
 
-Please note the starter code was "stolen" from https://github.com/janishutz/MusicPlayer (developed by one of the members of the group)
-
 ## Development
 ### Getting Started with WebDev
 Learning Vue & Vuetify (learning the basics of Vue should suffice to be able to use Vuetify):
@@ -17,8 +15,8 @@ Learning Vue & Vuetify (learning the basics of Vue should suffice to be able to 
 - [Icons](https://vuetifyjs.com/en/components/icons/)
 - This README
 - [MDN Docs](https://developer.mozilla.org/en-US/)
-- [MusicPlayer](https://github.com/janishutz/MusicPlayer/tree/dev/web) by @janishutz (as a reference for implementation)
-- [EYE-TAP frontend](https://github.com/eye-tap/frontend) (as a reference for implementation)
+- [MusicPlayer](https://github.com/janishutz/MusicPlayer/tree/dev/web) by @janishutz (as a reference for implementation, Vue only)
+- [EYE-TAP frontend](https://github.com/eye-tap/frontend) (as a reference for implementation, Vue only)
 - Any other docs online
 
 We may add fontawesome icons if you prefer them over the Material Design Icons.
@@ -32,8 +30,8 @@ or with an argument (that argument being the URL of a running instance of the ba
 
 
 ### Linter and type checker runs on PRs
-To keep the code style consistent, on every pull request, a GitHub action will run formatting your code if you haven't done so already.
-It will also run a type check and ***NO PR WITH FAILING TESTS*** will be merged (into `main`).
+To keep the code style consistent, on every pull request, a GitHub action will run formatting of your code if you haven't done so already.
+It will also run a type check and ***NO PR WITH FAILING CHECKS*** will be merged (into `main`).
 
 
 ### Running linter and type checker
@@ -83,6 +81,12 @@ or to start the container and removing it whenever you exit it:
 ```bash
 docker run -it -p 8081:8081 --rm -v .:/mnt ghcr.io/janishutz/dev-container-node
 ```
+Please note that you can instead of doing this use
+```bash
+docker exec -it frontend bash
+```
+when you used the `compose` file to achieve mostly the same results.
+The only difference being that the frontend has to be up when you use this command.
 
 #### Details
 The following environment variables can be set during development:
