@@ -7,8 +7,10 @@ import {
 
 export const useAuthStore = defineStore( 'authstore', () => {
     const isAuth = ref( import.meta.env.PROD ? false : ( import.meta.env.VITE_BACKENDLESS == 'true' ? true : false ) );
+    const username = ref( '' );
 
     return {
-        isAuth
+        isAuth,
+        username
     };
 } );

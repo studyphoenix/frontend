@@ -4,6 +4,9 @@
         onMounted,
         ref
     } from 'vue';
+    import type {
+        ControllerUserProfileResponse
+    } from '@/ts/types/api';
     import router from '@/router';
     import {
         useAuthStore
@@ -31,13 +34,10 @@
         isLoggingIn.value = false;
     };
 
-    const isAuthorizedHandler = () => {
-        if ( localStorage.getItem( 'close-tab' ) === 'true' ) {
-            localStorage.setItem( 'reauth-ok', 'true' );
-            localStorage.removeItem( 'close-tab' );
+    const isAuthorizedHandler = async () => {
+        const profile: ControllerUserProfileResponse = await ( await sdk.request.get( '/user/profile' ) ).json();
 
-            return window.close();
-        }
+        store.username = profile.username;
 
         router.push( '/app' );
     };
