@@ -7,7 +7,10 @@
     } from 'vuetify';
 
     const theme = useTheme();
+    const toggleTheme = theme.toggle;
     const store = useAuthStore();
+    const username = store.username;
+    const email = store.email;
 </script>
 
 <template>
@@ -19,8 +22,8 @@
         <v-list nav>
             <v-list-item
                 prepend-avatar="https://randomuser.me/api/portraits/women/84.jpg"
-                subtitle="jane.doe@example.ccom"
-                :title="store.username"
+                :subtitle="email"
+                :title="username"
                 link
                 href="/account"
             />
@@ -63,7 +66,7 @@
                 <v-list-item
                     prepend-icon="mdi-theme-light-dark"
                     title="Theme"
-                    @click="theme.toggle()"
+                    @click="toggleTheme()"
                 />
             </v-list>
         </template>
