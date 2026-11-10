@@ -7,9 +7,26 @@
  * ---------------------------------------------------------------
  */
 
+export interface ControllerAddChatMessageRequest {
+    /** @example "Model's message" */
+    'modelMessage': string;
+    /**
+   * @minLength 0
+   * @maxLength 250
+   * @example "test messages"
+   */
+    'summary': string;
+    /**
+   * @minLength 3
+   * @maxLength 20000
+   * @example "User's message"
+   */
+    'userMessage': string;
+}
+
 export interface ControllerCreateAssetRequest {
     /**
-   * The Icon of the asset. Must be an icon that can be rendered in the browser
+   * Must be a valid identifier for vuetify
    * @minLength 0
    * @maxLength 250
    * @example "fa-gear"
@@ -17,45 +34,50 @@ export interface ControllerCreateAssetRequest {
     'icon': string;
     /**
    * The mediatype (formerly MIME type) of the asset. Will block replacement with asset of another type
-   * @maxLength 250
-   * @example "application/json"
+   * @minLength 3
+   * @maxLength 40
+   * @example "application/pdf"
    */
     'mediaType': string;
     /**
    * @minLength 3
    * @maxLength 250
-   * @example "Analysis"
+   * @example "Analysis Script"
    */
     'name': string;
 }
 
 export interface ControllerCreateChatRequest {
     /**
-   * The Icon of the chat. Must be an icon that can be rendered in the browser
-   * @minLength 0
-   * @maxLength 250
-   * @example "fa-gear"
+   * @min 1
+   * @max 3
+   * @example 1
    */
-    'icon': string;
+    'mode': 1 | 2 | 3;
     /**
    * @minLength 3
-   * @maxLength 250
-   * @example "Analysis"
+   * @maxLength 100
+   * @example "Analysis Explanation"
    */
     'name': string;
 }
 
 export interface ControllerCreateFlashcardRequest {
     /**
+   * @minLength 0
+   * @example "summarized content for this flashcard with everything needed for the model to ask sensible questions"
+   */
+    'content': string;
+    /**
    * The Icon of the flashcard. Must be an icon that can be rendered in the browser
    * @minLength 0
-   * @maxLength 250
+   * @maxLength 100
    * @example "fa-gear"
    */
     'icon': string;
     /**
    * @minLength 3
-   * @maxLength 250
+   * @maxLength 100
    * @example "Analysis"
    */
     'name': string;
@@ -65,13 +87,13 @@ export interface ControllerCreateSubjectRequest {
     /**
    * The Icon of the subject. Must be an icon that can be rendered in the browser
    * @minLength 0
-   * @maxLength 250
+   * @maxLength 100
    * @example "fa-gear"
    */
     'icon': string;
     /**
    * @minLength 3
-   * @maxLength 250
+   * @maxLength 100
    * @example "Analysis"
    */
     'name': string;
@@ -79,15 +101,15 @@ export interface ControllerCreateSubjectRequest {
 
 export interface ControllerCreateSubtopicRequest {
     /**
-   * The Icon of the subtopic. Must be an icon that can be rendered in the browser
+   * The Icon of the subject. Must be an icon that can be rendered in the browser
    * @minLength 0
-   * @maxLength 250
+   * @maxLength 100
    * @example "fa-gear"
    */
     'icon': string;
     /**
    * @minLength 3
-   * @maxLength 250
+   * @maxLength 100
    * @example "Analysis"
    */
     'name': string;
@@ -95,7 +117,7 @@ export interface ControllerCreateSubtopicRequest {
 
 export interface ControllerUpdateAssetRequest {
     /**
-   * The Icon of the asset. Must be an icon that can be rendered in the browser
+   * Must be a valid identifier for vuetify
    * @minLength 0
    * @maxLength 250
    * @example "fa-gear"
@@ -104,39 +126,60 @@ export interface ControllerUpdateAssetRequest {
     /**
    * @minLength 3
    * @maxLength 250
-   * @example "Analysis"
+   * @example "Analysis Script"
    */
     'name'?: string;
 }
 
-export interface ControllerUpdateChatRequest {
+export interface ControllerUpdateChatMessageRequest {
+    /** @example "Model's message" */
+    'modelMessage'?: string;
     /**
-   * The Icon of the chat. Must be an icon that can be rendered in the browser
    * @minLength 0
    * @maxLength 250
-   * @example "fa-gear"
+   * @example "test messages"
    */
-    'icon'?: string;
+    'summary'?: string;
     /**
    * @minLength 3
-   * @maxLength 250
-   * @example "Analysis"
+   * @maxLength 20000
+   * @example "User's message"
+   */
+    'userMessage'?: string;
+}
+
+export interface ControllerUpdateChatRequest {
+    /**
+   * @min 1
+   * @max 3
+   * @example 2
+   */
+    'mode'?: 1 | 2 | 3;
+    /**
+   * @minLength 3
+   * @maxLength 100
+   * @example "Analysis Explanation"
    */
     'name'?: string;
 }
 
 export interface ControllerUpdateFlashcardRequest {
     /**
+   * @minLength 0
+   * @example "summarized content for this flashcard with everything needed for the model to ask sensible questions"
+   */
+    'content'?: string;
+    /**
    * The Icon of the flashcard. Must be an icon that can be rendered in the browser
    * @minLength 0
-   * @maxLength 250
+   * @maxLength 100
    * @example "fa-gear"
    */
     'icon'?: string;
     /**
    * @minLength 3
-   * @maxLength 250
-   * @example "Analysis"
+   * @maxLength 100
+   * @example "ODEs"
    */
     'name'?: string;
 }
@@ -145,13 +188,13 @@ export interface ControllerUpdateSubjectRequest {
     /**
    * The Icon of the subject. Must be an icon that can be rendered in the browser
    * @minLength 0
-   * @maxLength 250
+   * @maxLength 100
    * @example "fa-gear"
    */
     'icon'?: string;
     /**
    * @minLength 3
-   * @maxLength 250
+   * @maxLength 100
    * @example "Analysis"
    */
     'name'?: string;
@@ -159,21 +202,25 @@ export interface ControllerUpdateSubjectRequest {
 
 export interface ControllerUpdateSubtopicRequest {
     /**
-   * The Icon of the subtopic. Must be an icon that can be rendered in the browser
+   * The Icon of the subject. Must be an icon that can be rendered in the browser
    * @minLength 0
-   * @maxLength 250
+   * @maxLength 100
    * @example "fa-gear"
    */
     'icon'?: string;
     /**
    * @minLength 3
-   * @maxLength 250
+   * @maxLength 100
    * @example "Analysis"
    */
     'name'?: string;
 }
 
+export type ControllerUpdateUserConfigRequest = object;
+
 export interface ControllerUserProfileResponse {
+    /** @example "jane.doe@example.com" */
+    'email': string;
     /** @example "My Nice Username" */
     'username': string;
 }
@@ -191,6 +238,8 @@ export interface ModelAsset {
     'id': number;
     /** @example "application/pdf" */
     'mediaType': string;
+    /** @example "my asset name" */
+    'name': string;
     /** @example "2027-01-01T00:00:00Z" */
     'updatedAt': string;
 }
@@ -201,16 +250,11 @@ export interface ModelChat {
     'id': number;
     /**
    * the mode to be used for the UI
-   * @example 0
+   * @example 1
    */
     'mode': 1 | 2 | 3;
     /** @example "My nice chat name" */
     'name': string;
-    /**
-   * The id of the subtopic it belongs to
-   * @example 0
-   */
-    'subtopicId': number;
     /** @example "2026-12-31T08:32:08Z" */
     'updatedAt': string;
 }
@@ -218,19 +262,20 @@ export interface ModelChat {
 export interface ModelChatMessage {
     /** @example 1 */
     'chatId': number;
-    /** @example "2026-12-31T08:32:08Z" */
-    'createdAt': string;
-    /** @example "2026-12-31T08:34:12Z" */
-    'editedAt'?: string;
     /** @example 10 */
     'id': number;
     /** @example "Certianly! This..." */
     'modelMessage': string;
+    /** @example "summary for this message pair" */
+    'summary': string;
+    /** @example "2026-12-31T08:34:12Z" */
+    'updatedAt': string;
     /** @example "Explain why ..." */
     'userMessage': string;
 }
 
 export interface ModelFlashcard {
+    'completionCount': number;
     'content': string;
     'id': number;
     'name': string;
@@ -238,8 +283,15 @@ export interface ModelFlashcard {
     'updatedAt': string;
 }
 
+export interface ModelSettings {
+    'answerInBulletPoints': boolean;
+    'answerLength': 'very-short' | 'short' | 'default' | 'long' | 'very-long';
+}
+
 export interface ModelSubject {
     'assets'?: ModelAsset[];
+    /** @example "fa-gear" */
+    'icon': string;
     'id': number;
     /** @example "Analysis" */
     'name': string;
@@ -251,6 +303,8 @@ export interface ModelSubtopic {
     'assets'?: ModelAsset[];
     'chats'?: ModelChat[];
     'flashcards'?: ModelFlashcard[];
+    /** @example "fa-gear" */
+    'icon': string;
     'id': number;
     /** @example "ordinary differential equations" */
     'name': string;

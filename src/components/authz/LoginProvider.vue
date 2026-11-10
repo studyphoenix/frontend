@@ -38,6 +38,7 @@
         const profile: ControllerUserProfileResponse = await ( await sdk.request.get( '/user/profile' ) ).json();
 
         store.username = profile.username;
+        store.email = profile.email;
 
         router.push( '/app' );
     };
