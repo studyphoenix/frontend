@@ -16,6 +16,7 @@
         "@fontsource/roboto": "^5.2.10",
         "@janishutz/oidc-login-sdk-browser": "^1.5.3",
         "@mdi/font": "7.4.47",
+        "@vue-flow/core": "^1.48.2",
         "pinia": "^3.0.4",
         "vue": "^3.5.30",
         "vue-router": "^5.0.3",
