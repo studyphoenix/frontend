@@ -24,29 +24,6 @@ export interface ControllerAddChatMessageRequest {
     'userMessage': string;
 }
 
-export interface ControllerCreateAssetRequest {
-    /**
-   * Must be a valid identifier for vuetify
-   * @minLength 0
-   * @maxLength 250
-   * @example "fa-gear"
-   */
-    'icon': string;
-    /**
-   * The mediatype (formerly MIME type) of the asset. Will block replacement with asset of another type
-   * @minLength 3
-   * @maxLength 40
-   * @example "application/pdf"
-   */
-    'mediaType': string;
-    /**
-   * @minLength 3
-   * @maxLength 250
-   * @example "Analysis Script"
-   */
-    'name': string;
-}
-
 export interface ControllerCreateChatRequest {
     /**
    * @min 1
@@ -83,22 +60,6 @@ export interface ControllerCreateFlashcardRequest {
     'name': string;
 }
 
-export interface ControllerCreateSubjectRequest {
-    /**
-   * The Icon of the subject. Must be an icon that can be rendered in the browser
-   * @minLength 0
-   * @maxLength 100
-   * @example "fa-gear"
-   */
-    'icon': string;
-    /**
-   * @minLength 3
-   * @maxLength 100
-   * @example "Analysis"
-   */
-    'name': string;
-}
-
 export interface ControllerCreateSubtopicRequest {
     /**
    * The Icon of the subject. Must be an icon that can be rendered in the browser
@@ -113,22 +74,6 @@ export interface ControllerCreateSubtopicRequest {
    * @example "Analysis"
    */
     'name': string;
-}
-
-export interface ControllerUpdateAssetRequest {
-    /**
-   * Must be a valid identifier for vuetify
-   * @minLength 0
-   * @maxLength 250
-   * @example "fa-gear"
-   */
-    'icon'?: string;
-    /**
-   * @minLength 3
-   * @maxLength 250
-   * @example "Analysis Script"
-   */
-    'name'?: string;
 }
 
 export interface ControllerUpdateChatMessageRequest {
@@ -180,22 +125,6 @@ export interface ControllerUpdateFlashcardRequest {
    * @minLength 3
    * @maxLength 100
    * @example "ODEs"
-   */
-    'name'?: string;
-}
-
-export interface ControllerUpdateSubjectRequest {
-    /**
-   * The Icon of the subject. Must be an icon that can be rendered in the browser
-   * @minLength 0
-   * @maxLength 100
-   * @example "fa-gear"
-   */
-    'icon'?: string;
-    /**
-   * @minLength 3
-   * @maxLength 100
-   * @example "Analysis"
    */
     'name'?: string;
 }
@@ -274,6 +203,45 @@ export interface ModelChatMessage {
     'userMessage': string;
 }
 
+export interface ModelCreateAssetRequest {
+    /**
+   * Must be a valid identifier for vuetify
+   * @minLength 0
+   * @maxLength 250
+   * @example "fa-gear"
+   */
+    'icon': string;
+    /**
+   * The mediatype (formerly MIME type) of the asset. Will block replacement with asset of another type
+   * @minLength 3
+   * @maxLength 40
+   * @example "application/pdf"
+   */
+    'mediaType': string;
+    /**
+   * @minLength 3
+   * @maxLength 250
+   * @example "Analysis Script"
+   */
+    'name': string;
+}
+
+export interface ModelCreateSubjectRequest {
+    /**
+   * The Icon of the subject. Must be an icon that can be rendered in the browser
+   * @minLength 0
+   * @maxLength 100
+   * @example "fa-gear"
+   */
+    'icon': string;
+    /**
+   * @minLength 3
+   * @maxLength 100
+   * @example "Analysis"
+   */
+    'name': string;
+}
+
 export interface ModelFlashcard {
     'completionCount': number;
     'content': string;
@@ -311,4 +279,36 @@ export interface ModelSubtopic {
     'subtopics'?: ModelSubtopic[];
     /** @example "2026-12-17T13:47:33Z" */
     'updatedAt': string;
+}
+
+export interface ModelUpdateAssetRequest {
+    /**
+   * Must be a valid identifier for vuetify
+   * @minLength 0
+   * @maxLength 250
+   * @example "fa-gear"
+   */
+    'icon'?: string;
+    /**
+   * @minLength 3
+   * @maxLength 250
+   * @example "Analysis Script"
+   */
+    'name'?: string;
+}
+
+export interface ModelUpdateSubjectRequest {
+    /**
+   * The Icon of the subject. Must be an icon that can be rendered in the browser
+   * @minLength 0
+   * @maxLength 100
+   * @example "fa-gear"
+   */
+    'icon'?: string;
+    /**
+   * @minLength 3
+   * @maxLength 100
+   * @example "Analysis"
+   */
+    'name'?: string;
 }
