@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [[ $1 != "" ]]; then
     npx swagger-typescript-api@13.13.0 generate --path http://$1:8080/swagger/doc.json -o ./src/ts/types -n api.d.ts --no-client
 else
