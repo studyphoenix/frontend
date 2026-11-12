@@ -1,0 +1,22 @@
+name: Update data types
+on:
+  pull_request:
+env:
+ BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+jobs:
+  run_eslint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          persist-credentials: true
+      - name: Generate types
+        run: ./generate-types.yml ci
+      - name: Push changes back to repository
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: updated data types for API [skip ci]"
