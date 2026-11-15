@@ -1,9 +1,16 @@
 <script setup lang="ts">
     import {
+        useAuthStore
+    } from '@/stores/authstore';
+    import {
         useTheme
     } from 'vuetify';
 
     const theme = useTheme();
+    const toggleTheme = theme.toggle;
+    const store = useAuthStore();
+    const username = store.username;
+    const email = store.email;
 </script>
 
 <template>
@@ -15,10 +22,10 @@
         <v-list nav>
             <v-list-item
                 prepend-avatar="https://randomuser.me/api/portraits/women/84.jpg"
-                subtitle="jane.doe@example.ccom"
-                title="Jane Doe"
+                :subtitle="email"
+                :title="username"
                 link
-                href="/profile"
+                href="/account"
             />
         </v-list>
 
@@ -33,18 +40,18 @@
                 href="/"
             />
             <v-list-item
-                prepend-icon="mdi-flag"
+                prepend-icon="mdi-chat"
                 title="Chats"
                 value="chats"
                 link
-                href="/flags"
+                href="/chat"
             />
             <v-list-item
-                prepend-icon="mdi-ab-testing"
-                title="A/B Testing"
-                value="ab-testing"
+                prepend-icon="mdi-school"
+                title="Subjects"
+                value="subjects"
                 link
-                href="/ab-testing"
+                href="/subjects"
             />
         </v-list>
         <template #append>
@@ -59,7 +66,7 @@
                 <v-list-item
                     prepend-icon="mdi-theme-light-dark"
                     title="Theme"
-                    @click="theme.toggle()"
+                    @click="toggleTheme()"
                 />
             </v-list>
         </template>

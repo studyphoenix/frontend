@@ -49,7 +49,7 @@ router.afterEach( to => {
         'top': 0,
         'behavior': 'smooth'
     } );
-    document.title = to.meta.title ? to.meta.title + ' - MusicPlayer' : 'MusicPlayer';
+    document.title = to.meta.title ? to.meta.title + ' - StudyPhoenix' : 'StudyPhoenix';
     // NProgress.done();
 } );
 
