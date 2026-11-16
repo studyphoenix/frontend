@@ -13,30 +13,35 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
         'id': 2,
         'name': 'Discrete Distributions',
         'icon': '',
+        'progress': 100,
         'updatedAt': '2026-11-12T00:00:00Z'
     };
     const continuous: ModelSubtopic = {
         'id': 3,
         'name': 'Continuous Variables',
         'icon': '',
+        'progress': 60,
         'updatedAt': '2026-11-12T00:00:00Z'
     };
     const expectation: ModelSubtopic = {
         'id': 4,
         'name': 'Expectation & Variance',
         'icon': '',
+        'progress': 25,
         'updatedAt': '2026-11-12T00:00:00Z'
     };
     const joint: ModelSubtopic = {
         'id': 5,
         'name': 'Joint Distributions',
         'icon': '',
+        'progress': 0,
         'updatedAt': '2026-11-12T00:00:00Z'
     };
     const clt: ModelSubtopic = {
         'id': 6,
         'name': 'Central Limit Theorem',
         'icon': '',
+        'progress': 0,
         'updatedAt': '2026-11-12T00:00:00Z'
     };
     const subtopics = ref<ModelSubtopic[]>( [
@@ -44,26 +49,27 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
             'id': 1,
             'name': 'Probability Axioms',
             'icon': '',
+            'progress': 100,
             'updatedAt': '2026-11-12T00:00:00Z',
-            'subtopics': [
+            'children': [
                 discrete,
                 continuous
             ]
         },
         {
             ...discrete,
-            'subtopics': [ expectation ]
+            'children': [ expectation ]
         },
         {
             ...continuous,
-            'subtopics': [
+            'children': [
                 expectation,
                 joint
             ]
         },
         {
             ...expectation,
-            'subtopics': [ clt ]
+            'children': [ clt ]
         },
         joint,
         clt
