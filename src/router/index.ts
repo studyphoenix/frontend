@@ -26,6 +26,15 @@ const router = createRouter( {
                 'title': 'App',
                 'auth': true
             }
+        },
+        {
+            'path': '/techtree',
+            'name': 'techtree',
+            'component': () => import( '@/pages/TechTreePage.vue' ),
+            'meta': {
+                'title': 'Tech Tree',
+                'auth': true
+            }
         }
     ]
 } );

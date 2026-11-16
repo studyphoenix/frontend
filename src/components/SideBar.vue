@@ -53,6 +53,13 @@
                 link
                 href="/subjects"
             />
+            <v-list-item
+                prepend-icon="mdi-sitemap"
+                title="Tech Tree"
+                value="techtree"
+                link
+                href="/techtree"
+            />
         </v-list>
         <template #append>
             <v-list density="compact">
