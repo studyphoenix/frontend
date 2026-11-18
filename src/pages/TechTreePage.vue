@@ -1,18 +1,23 @@
 <script setup lang="ts">
     import '@vue-flow/core/dist/style.css';
+    import type {
+        NodeMouseEvent,
+        VueFlowStore
+    } from '@vue-flow/core';
     import {
         computed,
         onMounted,
         ref,
         watch
     } from 'vue';
+    import type {
+        ModelSubtopic
+    } from '@/ts/types/api';
     import SideBar from '@/components/SideBar.vue';
+    import SubtopicDetailPopup from '@/components/techtree/SubtopicDetailPopup.vue';
     import TechTreeNode from '@/components/techtree/TechTreeNode.vue';
     import {
         VueFlow
-    } from '@vue-flow/core';
-    import type {
-        VueFlowStore
     } from '@vue-flow/core';
     import {
         buildTechTreeGraph
@@ -28,9 +33,25 @@
     const stateStore = useStateStore();
     const graph = computed( () => buildTechTreeGraph( store.subtopics ) );
     const flowInstance = ref<VueFlowStore | null>( null );
+    const selectedSubtopic = ref<ModelSubtopic | null>( null );
+    const popupOpen = ref( false );
 
     const handleFlowInit = ( instance: VueFlowStore ) => {
         flowInstance.value = instance;
+    };
+
+    const handleNodeClick = ( {
+        node
+    }: NodeMouseEvent ) => {
+        const subtopic = node.data?.subtopic as ModelSubtopic | undefined;
+
+        if ( !subtopic ) {
+            return;
+        }
+
+        selectedSubtopic.value = subtopic;
+        store.selectedSubtopicId = subtopic.id;
+        popupOpen.value = true;
     };
 
     const handleFitView = () => {
@@ -121,6 +142,7 @@
                 :nodes-draggable="false"
                 :zoom-on-double-click="false"
                 @init="handleFlowInit"
+                @node-click="handleNodeClick"
             >
                 <template #node-tech-node="nodeProps">
                     <TechTreeNode :subtopic="nodeProps.data.subtopic" />
@@ -159,6 +181,11 @@
                 />
             </div>
         </div>
+
+        <SubtopicDetailPopup
+            v-model="popupOpen"
+            :subtopic="selectedSubtopic"
+        />
     </v-container>
 </template>
 
