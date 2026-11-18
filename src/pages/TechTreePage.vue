@@ -3,12 +3,16 @@
     import {
         computed,
         onMounted,
+        ref,
         watch
     } from 'vue';
     import SideBar from '@/components/SideBar.vue';
     import TechTreeNode from '@/components/techtree/TechTreeNode.vue';
     import {
         VueFlow
+    } from '@vue-flow/core';
+    import type {
+        VueFlowStore
     } from '@vue-flow/core';
     import {
         buildTechTreeGraph
@@ -23,6 +27,17 @@
     const store = useTechTreeStore();
     const stateStore = useStateStore();
     const graph = computed( () => buildTechTreeGraph( store.subtopics ) );
+    const flowInstance = ref<VueFlowStore | null>( null );
+
+    const handleFlowInit = ( instance: VueFlowStore ) => {
+        flowInstance.value = instance;
+    };
+
+    const handleFitView = () => {
+        flowInstance.value?.fitView( {
+            'padding': 0.2
+        } );
+    };
 
     const loadSelectedSubject = async ( subjectId: number ) => {
         if ( !Number.isFinite( subjectId ) || subjectId <= 0 ) {
@@ -51,7 +66,7 @@
 </script>
 
 <template>
-    <v-container class="fill-height d-flex flex-column pa-6" fluid>
+    <v-container class="techtree-page fill-height d-flex flex-column align-stretch pa-6" fluid>
         <SideBar />
 
         <div class="d-flex align-center justify-space-between w-100 mb-4 ga-4">
@@ -105,18 +120,93 @@
                 :nodes-connectable="false"
                 :nodes-draggable="false"
                 :zoom-on-double-click="false"
+                @init="handleFlowInit"
             >
                 <template #node-tech-node="nodeProps">
                     <TechTreeNode :subtopic="nodeProps.data.subtopic" />
                 </template>
             </VueFlow>
+
+            <div v-if="graph.nodes.length > 0" class="canvas-legend d-flex align-center ga-4 px-3 py-1 text-caption text-medium-emphasis">
+                <div class="d-flex align-center ga-1">
+                    <v-icon
+                        color="success"
+                        icon="mdi-check-circle"
+                        size="14"
+                    />
+                    <span>Completed</span>
+                </div>
+
+                <div class="d-flex align-center ga-1">
+                    <span class="legend-dot bg-primary"></span>
+                    <span>In Progress</span>
+                </div>
+
+                <div class="d-flex align-center ga-1">
+                    <span class="legend-dot bg-surface-variant"></span>
+                    <span>Not Started</span>
+                </div>
+            </div>
+
+            <div v-if="graph.nodes.length > 0" class="canvas-controls d-flex align-center pa-1">
+                <v-btn
+                    density="compact"
+                    icon="mdi-crosshairs-gps"
+                    size="small"
+                    title="Recenter view"
+                    variant="text"
+                    @click="handleFitView"
+                />
+            </div>
         </div>
     </v-container>
 </template>
 
 <style scoped lang="scss">
+    .techtree-page {
+        height: 100dvh;
+        flex-wrap: nowrap;
+    }
+
     .tree-canvas {
         width: 100%;
-        height: 640px;
+        flex: 1 1 0;
+        min-height: 400px;
+        position: relative;
+        border-radius: 8px;
+        border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+        background-color: rgb(var(--v-theme-surface));
+        background-image: radial-gradient(rgba(var(--v-theme-on-surface), 0.12) 1px, transparent 1px);
+        background-size: 24px 24px;
+        overflow: hidden;
+
+        .canvas-legend {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            z-index: 10;
+            background: rgba(var(--v-theme-surface), 0.88);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+            border-radius: 6px;
+        }
+
+        .canvas-controls {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            z-index: 10;
+            background: rgba(var(--v-theme-surface), 0.88);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+            border-radius: 6px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
     }
 </style>
