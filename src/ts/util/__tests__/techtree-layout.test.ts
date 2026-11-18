@@ -40,7 +40,7 @@ test( 'unfolds subtopics and creates edges', () => {
         result.nodes.find( n => n.id === '2' )?.position,
         {
             'x': 0,
-            'y': 130
+            'y': 140
         }
     );
 } );
@@ -82,14 +82,14 @@ test( 'deduplicates shared child with two parents', () => {
     assert.deepEqual(
         result.nodes.find( n => n.id === '1' )?.position,
         {
-            'x': -120,
+            'x': -130,
             'y': 0
         }
     );
     assert.deepEqual(
         result.nodes.find( n => n.id === '2' )?.position,
         {
-            'x': 120,
+            'x': 130,
             'y': 0
         }
     );
@@ -97,7 +97,7 @@ test( 'deduplicates shared child with two parents', () => {
         result.nodes.find( n => n.id === '3' )?.position,
         {
             'x': 0,
-            'y': 130
+            'y': 140
         }
     );
 } );
@@ -148,8 +148,8 @@ test( 'keeps children when full subtopic comes after stub', () => {
     );
     assert.equal( result.nodes.length, 3 );
     assert.equal( result.nodes.find( n => n.id === '1' )?.position.y, 0 );
-    assert.equal( result.nodes.find( n => n.id === '2' )?.position.y, 130 );
-    assert.equal( result.nodes.find( n => n.id === '3' )?.position.y, 260 );
+    assert.equal( result.nodes.find( n => n.id === '2' )?.position.y, 140 );
+    assert.equal( result.nodes.find( n => n.id === '3' )?.position.y, 280 );
     assert.equal( ( result.nodes.find( n => n.id === '2' )?.data as {
         'subtopic': ModelSubtopic
     } ).subtopic.name, 'Full Child' );
@@ -217,6 +217,62 @@ test( 'places node below all prerequisites', () => {
 
     assert.equal( result.nodes.length, 3 );
     assert.equal( result.nodes.find( n => n.id === '1' )?.position.y, 0 );
-    assert.equal( result.nodes.find( n => n.id === '2' )?.position.y, 130 );
-    assert.equal( result.nodes.find( n => n.id === '3' )?.position.y, 260 );
+    assert.equal( result.nodes.find( n => n.id === '2' )?.position.y, 140 );
+    assert.equal( result.nodes.find( n => n.id === '3' )?.position.y, 280 );
+    assert.deepEqual(
+        result.edges.map( e => `${ e.source }->${ e.target }` ),
+        [
+            '1->2',
+            '2->3'
+        ]
+    );
+} );
+
+test( 'preserves diamond split-and-merge edges without dropping non-transitive edges', () => {
+    const nodeD: ModelSubtopic = {
+        'id': 4,
+        'name': 'Merged Topic',
+        'icon': '',
+        'progress': 0,
+        'updatedAt': '2026-11-12T00:00:00Z'
+    };
+    const nodeB: ModelSubtopic = {
+        'id': 2,
+        'name': 'Branch B',
+        'icon': '',
+        'progress': 0,
+        'updatedAt': '2026-11-12T00:00:00Z',
+        'children': [ nodeD ]
+    };
+    const nodeC: ModelSubtopic = {
+        'id': 3,
+        'name': 'Branch C',
+        'icon': '',
+        'progress': 0,
+        'updatedAt': '2026-11-12T00:00:00Z',
+        'children': [ nodeD ]
+    };
+    const nodeA: ModelSubtopic = {
+        'id': 1,
+        'name': 'Root',
+        'icon': '',
+        'progress': 0,
+        'updatedAt': '2026-11-12T00:00:00Z',
+        'children': [
+            nodeB,
+            nodeC
+        ]
+    };
+    const result = buildTechTreeGraph( [ nodeA ] );
+
+    assert.equal( result.nodes.length, 4 );
+    assert.deepEqual(
+        result.edges.map( e => `${ e.source }->${ e.target }` ),
+        [
+            '1->2',
+            '1->3',
+            '2->4',
+            '3->4'
+        ]
+    );
 } );

@@ -2,9 +2,6 @@ import type {
     Edge,
     Node
 } from '@vue-flow/core';
-import {
-    MarkerType
-} from '@vue-flow/core';
 import type {
     ModelSubtopic
 } from '@/ts/types/api';
@@ -14,11 +11,49 @@ export interface TechTreeGraph {
     'edges': Edge[];
 }
 
+const isReachableFromOtherChild = (
+    parentId: number,
+    targetId: number,
+    rawChildrenMap: Map<number, number[]>
+): boolean => {
+    const directChildren = rawChildrenMap.get( parentId ) ?? [];
+    const visited = new Set<number>( [ parentId ] );
+    const queue: number[] = [];
+
+    for ( const siblingId of directChildren ) {
+        if ( siblingId !== targetId && !visited.has( siblingId ) ) {
+            visited.add( siblingId );
+            queue.push( siblingId );
+        }
+    }
+
+    let head = 0;
+
+    while ( head < queue.length ) {
+        const currentId = queue[head++];
+
+        for ( const nextId of rawChildrenMap.get( currentId ) ?? [] ) {
+            if ( nextId === targetId ) {
+                return true;
+            }
+
+            if ( !visited.has( nextId ) ) {
+                visited.add( nextId );
+                queue.push( nextId );
+            }
+        }
+    }
+
+    return false;
+};
+
 export const buildTechTreeGraph = ( items: ModelSubtopic[] ): TechTreeGraph => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     const subtopicMap = new Map<number, ModelSubtopic>();
+    const rawChildrenMap = new Map<number, number[]>();
     const childrenMap = new Map<number, number[]>();
+    const parentsMap = new Map<number, number[]>();
     const inDegree = new Map<number, number>();
     const edgeSet = new Set<string>();
 
@@ -34,26 +69,17 @@ export const buildTechTreeGraph = ( items: ModelSubtopic[] ): TechTreeGraph => {
             inDegree.set( id, 0 );
         }
 
-        if ( children != null && children.length > 0 && !childrenMap.has( id ) ) {
+        if ( children != null && children.length > 0 && !rawChildrenMap.has( id ) ) {
             const childIds: number[] = [];
 
-            childrenMap.set( id, childIds );
+            rawChildrenMap.set( id, childIds );
 
             for ( const child of children ) {
-                const edgeId = `e${ id }-${ child.id }`;
+                const edgeKey = `${ id }->${ child.id }`;
 
-                if ( !edgeSet.has( edgeId ) ) {
-                    edgeSet.add( edgeId );
+                if ( !edgeSet.has( edgeKey ) ) {
+                    edgeSet.add( edgeKey );
                     childIds.push( child.id );
-                    edges.push( {
-                        'id': edgeId,
-                        'source': String( id ),
-                        'target': String( child.id ),
-                        'markerEnd': {
-                            'type': MarkerType.ArrowClosed
-                        }
-                    } );
-                    inDegree.set( child.id, ( inDegree.get( child.id ) ?? 0 ) + 1 );
                 }
 
                 visit( child );
@@ -63,6 +89,31 @@ export const buildTechTreeGraph = ( items: ModelSubtopic[] ): TechTreeGraph => {
 
     for ( const item of items ) {
         visit( item );
+    }
+
+    for ( const [
+        parentId,
+        rawChildIds
+    ] of rawChildrenMap.entries() ) {
+        const directChildIds: number[] = [];
+
+        for ( const childId of rawChildIds ) {
+            if ( !isReachableFromOtherChild( parentId, childId, rawChildrenMap ) ) {
+                directChildIds.push( childId );
+                edges.push( {
+                    'id': `e${ parentId }-${ childId }`,
+                    'source': String( parentId ),
+                    'target': String( childId )
+                } );
+                inDegree.set( childId, ( inDegree.get( childId ) ?? 0 ) + 1 );
+                const childParents = parentsMap.get( childId ) ?? [];
+
+                childParents.push( parentId );
+                parentsMap.set( childId, childParents );
+            }
+        }
+
+        childrenMap.set( parentId, directChildIds );
     }
 
     const depth = new Map<number, number>();
@@ -75,8 +126,10 @@ export const buildTechTreeGraph = ( items: ModelSubtopic[] ): TechTreeGraph => {
         }
     } );
 
-    while ( queue.length > 0 ) {
-        const currentId = queue.shift()!;
+    let head = 0;
+
+    while ( head < queue.length ) {
+        const currentId = queue[head++];
         const currentDepth = depth.get( currentId ) ?? 0;
 
         for ( const childId of childrenMap.get( currentId ) ?? [] ) {
@@ -103,16 +156,37 @@ export const buildTechTreeGraph = ( items: ModelSubtopic[] ): TechTreeGraph => {
         rows.set( d, row );
     }
 
-    const colSpacing = 240;
-    const rowSpacing = 130;
+    const colSpacing = 260;
+    const rowSpacing = 140;
+    const nodeX = new Map<number, number>();
+    const sortedDepths = Array.from( rows.keys() ).sort( ( a, b ) => a - b );
 
-    rows.forEach( ( rowIds, rowDepth ) => {
+    for ( const rowDepth of sortedDepths ) {
+        const rowIds = rows.get( rowDepth ) ?? [];
+
+        if ( rowDepth > 0 ) {
+            const getParentCenterX = ( id: number ): number => {
+                const placedParents = ( parentsMap.get( id ) ?? [] ).filter( pid => nodeX.has( pid ) );
+
+                if ( placedParents.length === 0 ) {
+                    return 0;
+                }
+
+                const sum = placedParents.reduce( ( acc, pid ) => acc + ( nodeX.get( pid ) ?? 0 ), 0 );
+
+                return sum / placedParents.length;
+            };
+
+            rowIds.sort( ( a, b ) => getParentCenterX( a ) - getParentCenterX( b ) );
+        }
+
         const rowWidth = ( rowIds.length - 1 ) * colSpacing;
 
         rowIds.forEach( ( id, index ) => {
             const subtopic = subtopicMap.get( id )!;
             const xOffset = ( index * colSpacing ) - ( rowWidth / 2 );
 
+            nodeX.set( id, xOffset );
             nodes.push( {
                 'id': String( id ),
                 'type': 'tech-node',
@@ -125,7 +199,7 @@ export const buildTechTreeGraph = ( items: ModelSubtopic[] ): TechTreeGraph => {
                 }
             } );
         } );
-    } );
+    }
 
     return {
         nodes,
