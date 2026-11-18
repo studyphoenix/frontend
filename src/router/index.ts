@@ -38,6 +38,15 @@ const router = createRouter( {
                 'title': 'Tech Tree',
                 'auth': true
             }
+        },
+        {
+            'path': '/chat/:id?',
+            'name': 'chat',
+            'component': () => import( '@/pages/ChatPage.vue' ),
+            'meta': {
+                'title': 'Chat',
+                'auth': true
+            }
         }
     ]
 } );

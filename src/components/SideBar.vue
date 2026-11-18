@@ -44,7 +44,7 @@
                 title="Chats"
                 value="chats"
                 link
-                href="/chat"
+                to="/chat"
             />
             <v-list-item
                 prepend-icon="mdi-school"
