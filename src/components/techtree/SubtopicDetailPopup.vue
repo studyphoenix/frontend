@@ -204,16 +204,20 @@
 
         removingItem.value = true;
 
-        if ( item.kind === 'chat' ) {
-            await store.detachChat( target.id, item.id );
-        } else {
-            await store.detachAsset( target.id, item.id );
-        }
+        try {
+            if ( item.kind === 'chat' ) {
+                await store.deleteChat( target.id, item.id );
+            } else {
+                await store.deleteAsset( target.id, item.id );
+            }
 
-        removingItem.value = false;
-
-        if ( !store.subtopicError ) {
-            pendingRemoval.value = null;
+            if ( !store.subtopicError ) {
+                pendingRemoval.value = null;
+            }
+        } catch ( err ) {
+            store.subtopicError = err instanceof Error ? err.message : 'Delete failed';
+        } finally {
+            removingItem.value = false;
         }
     };
 
@@ -565,10 +569,10 @@
             rounded="lg"
         >
             <h3 class="text-h6 font-weight-bold mb-2">
-                Remove {{ pendingRemoval?.kind === 'chat' ? 'chat' : 'asset' }}?
+                Delete {{ pendingRemoval?.kind === 'chat' ? 'chat' : 'asset' }}?
             </h3>
             <p class="text-body-2 text-medium-emphasis mb-5">
-                Are you sure you want to remove "{{ pendingRemoval?.name }}" from this subtopic?
+                Are you sure you want to delete "{{ pendingRemoval?.name }}"?
             </p>
 
             <v-alert
@@ -598,7 +602,7 @@
                     variant="tonal"
                     @click="confirmRemove"
                 >
-                    Remove
+                    Delete
                 </v-btn>
             </div>
         </v-sheet>

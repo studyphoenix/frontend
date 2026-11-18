@@ -297,7 +297,27 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
         }
     };
 
-    const detachChat = async ( subtopicId: number, chatId: number ) => {
+    const deleteAndRefresh = async ( subtopicId: number, endpoint: string, label: string ) => {
+        subtopicError.value = null;
+
+        try {
+            const targetUrl = new URL( endpoint, request.getBackendURL() );
+            const res = await fetch( targetUrl, {
+                'method': 'DELETE',
+                'credentials': 'include'
+            } );
+
+            if ( !res.ok ) {
+                throw new Error( `Failed to delete ${ label } (${ res.status })` );
+            }
+
+            await fetchSubtopicDetails( subtopicId );
+        } catch ( err ) {
+            subtopicError.value = err instanceof Error ? err.message : `Failed to delete ${ label }`;
+        }
+    };
+
+    const deleteChat = async ( subtopicId: number, chatId: number ) => {
         if ( isBackendless ) {
             if ( activeSubtopic.value && activeSubtopic.value.id === subtopicId ) {
                 activeSubtopic.value.chats = ( activeSubtopic.value.chats ?? [] ).filter( c => c.id !== chatId );
@@ -306,22 +326,7 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
             return;
         }
 
-        subtopicError.value = null;
-
-        try {
-            const res = await patchJson(
-                `/subtopics/deassociate/chats/${ subtopicId }`,
-                [ chatId ]
-            );
-
-            if ( !res.ok ) {
-                throw new Error( `Failed to detach chat (${ res.status })` );
-            }
-
-            await fetchSubtopicDetails( subtopicId );
-        } catch ( err ) {
-            subtopicError.value = err instanceof Error ? err.message : 'Failed to remove chat';
-        }
+        await deleteAndRefresh( subtopicId, `/chats/delete/${ chatId }`, 'chat' );
     };
 
     const uploadAndAttachAsset = async ( subtopicId: number, file: File ): Promise<ModelAsset | null> => {
@@ -406,7 +411,7 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
         }
     };
 
-    const detachAsset = async ( subtopicId: number, assetId: number ) => {
+    const deleteAsset = async ( subtopicId: number, assetId: number ) => {
         if ( isBackendless ) {
             if ( activeSubtopic.value && activeSubtopic.value.id === subtopicId ) {
                 activeSubtopic.value.assets = ( activeSubtopic.value.assets ?? [] ).filter( a => a.id !== assetId );
@@ -415,22 +420,7 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
             return;
         }
 
-        subtopicError.value = null;
-
-        try {
-            const res = await patchJson(
-                `/subtopics/deassociate/assets/${ subtopicId }`,
-                [ assetId ]
-            );
-
-            if ( !res.ok ) {
-                throw new Error( `Failed to detach asset (${ res.status })` );
-            }
-
-            await fetchSubtopicDetails( subtopicId );
-        } catch ( err ) {
-            subtopicError.value = err instanceof Error ? err.message : 'Failed to remove asset';
-        }
+        await deleteAndRefresh( subtopicId, `/assets/delete/${ assetId }`, 'asset' );
     };
 
     return {
@@ -446,8 +436,8 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
         fetchTechTree,
         fetchSubtopicDetails,
         createAndAttachChat,
-        detachChat,
+        deleteChat,
         uploadAndAttachAsset,
-        detachAsset
+        deleteAsset
     };
 } );
