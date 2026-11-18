@@ -12,8 +12,13 @@
         'assetId': number
     }>();
 
-    watch( files, () => {
-        request.sendFormData( `/assets/upload/${ props.assetId }`, new FormData() );
+    watch( files, async () => {
+        try {
+            await request.sendFormData( `/assets/upload/${ props.assetId }`, new FormData() );
+        } catch ( error ) {
+            console.error( error );
+            alert( 'File upload failed. Please try again' );
+        }
     } );
 </script>
 
