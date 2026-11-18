@@ -26,6 +26,11 @@ const router = createRouter( {
                 'title': 'App',
                 'auth': true
             }
+        },
+        {
+            'path': '/chat',
+            'name': 'chat',
+            'component': () => import ( '@/components/chat/Chat.vue')
         }
     ]
 } );
