@@ -1,5 +1,10 @@
 <script setup lang="ts">
     import '@vue-flow/core/dist/style.css';
+    import {
+        computed,
+        onMounted,
+        watch
+    } from 'vue';
     import SideBar from '@/components/SideBar.vue';
     import TechTreeNode from '@/components/techtree/TechTreeNode.vue';
     import {
@@ -9,27 +14,88 @@
         buildTechTreeGraph
     } from '@/ts/util/techtree-layout';
     import {
-        computed
-    } from 'vue';
+        useStateStore
+    } from '@/stores/statestore';
     import {
         useTechTreeStore
     } from '@/stores/techtree';
 
     const store = useTechTreeStore();
+    const stateStore = useStateStore();
     const graph = computed( () => buildTechTreeGraph( store.subtopics ) );
+
+    const loadSelectedSubject = async ( subjectId: number ) => {
+        if ( !Number.isFinite( subjectId ) || subjectId <= 0 ) {
+            return;
+        }
+
+        localStorage.setItem( 'sp-selected-subject', String( subjectId ) );
+        await store.fetchTechTree( subjectId );
+    };
+
+    watch( () => stateStore.selectedSubject, subjectId => {
+        loadSelectedSubject( subjectId );
+    } );
+
+    onMounted( async () => {
+        await store.fetchSubjects();
+
+        if ( !Number.isFinite( stateStore.selectedSubject ) || stateStore.selectedSubject <= 0 ) {
+            if ( store.subjects.length > 0 ) {
+                stateStore.selectedSubject = store.subjects[0].id;
+            }
+        } else {
+            await loadSelectedSubject( stateStore.selectedSubject );
+        }
+    } );
 </script>
 
 <template>
     <v-container class="fill-height d-flex flex-column pa-6" fluid>
         <SideBar />
 
-        <h1 class="mb-4 align-self-start">
-            Tech Tree
-        </h1>
+        <div class="d-flex align-center justify-space-between w-100 mb-4 ga-4">
+            <h1>
+                Tech Tree
+            </h1>
+
+            <v-select
+                v-if="store.subjects.length > 0"
+                v-model="stateStore.selectedSubject"
+                density="compact"
+                hide-details
+                item-title="name"
+                item-value="id"
+                :items="store.subjects"
+                label="Subject"
+                max-width="280"
+            />
+        </div>
 
         <div class="tree-canvas">
+            <div v-if="store.loading" class="d-flex align-center justify-center fill-height">
+                <v-progress-circular indeterminate />
+            </div>
+
+            <v-alert
+                v-else-if="store.error"
+                type="error"
+                variant="tonal"
+            >
+                {{ store.error }}
+            </v-alert>
+
+            <div v-else-if="store.subjects.length === 0" class="d-flex align-center justify-center fill-height text-medium-emphasis">
+                No subjects found yet. Create a subject first.
+            </div>
+
+            <div v-else-if="graph.nodes.length === 0" class="d-flex align-center justify-center fill-height text-medium-emphasis">
+                No subtopics found for this subject yet.
+            </div>
+
             <VueFlow
-                v-if="graph.nodes.length > 0"
+                v-else
+                :key="stateStore.selectedSubject"
                 :edges="graph.edges"
                 :elements-selectable="false"
                 fit-view-on-init
