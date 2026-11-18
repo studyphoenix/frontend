@@ -58,7 +58,7 @@
                 title="Tech Tree"
                 value="techtree"
                 link
-                href="/techtree"
+                to="/techtree"
             />
         </v-list>
         <template #append>
