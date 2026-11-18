@@ -1,7 +1,8 @@
 <script setup lang="ts">
     import type {
         ChatMessagePair
-    } from '@/ts/types';
+    } from '@/ts/types/chat';
+
 
     const props = defineProps<{
         'message': ChatMessagePair
