@@ -43,9 +43,9 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 
 <template>
     <v-container class="mb-0 pb-0 ">
-        <Renderer class="h-100 flex-column d-flex text-body-large" :message="msgs" />
+        <ChatRenderer class="h-100 flex-column d-flex text-body-large" :message="msgs" />
         <v-sheet class="flex-md-column self-align-end position-sticky pa-2 bottom-0 border rounded-lg">
-            <v-text-field label="Ask Anything"></v-text-field>
+            <v-text-field label="Ask Anything" />
         </v-sheet>
     </v-container>
 </template>

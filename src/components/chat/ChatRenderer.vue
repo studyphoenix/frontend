@@ -16,6 +16,6 @@
         <v-sheet class="h-auto w-75 ps-2 rounded-lg mb-4 align-self-start">
             {{ props.message.response }}
         </v-sheet>
-        <Renderer v-if="props.message.child" :message="props.message.child!" />
+        <ChatRenderer v-if="props.message.child" :message="props.message.child!" />
     </div>
 </template>
