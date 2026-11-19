@@ -31,6 +31,15 @@ const router = createRouter( {
             }
         },
         {
+            'path': '/techtree',
+            'name': 'techtree',
+            'component': () => import( '@/pages/TechTreePage.vue' ),
+            'meta': {
+                'title': 'Tech Tree',
+                'auth': true
+            }
+        },
+        {
             'path': '/chat/:id?',
             'name': 'chat',
             'component': () => import( '@/pages/ChatPage.vue' ),

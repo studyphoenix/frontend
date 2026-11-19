@@ -1,6 +1,9 @@
 name: Lint code using eslint and type check
 on:
   pull_request:
+  push:
+    branches:
+      - main
 env:
  BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
 jobs:
