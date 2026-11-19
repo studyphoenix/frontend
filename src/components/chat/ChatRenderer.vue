@@ -1,22 +1,23 @@
 <script setup lang="ts">
     import type {
-        ChatMessagePair
-    } from '@/ts/types/chat';
+        ModelChatMessage
+    } from '@/ts/types/api';
 
 
     const props = defineProps<{
-        'message': ChatMessagePair
+        'message': ModelChatMessage[];
     }>();
 </script>
 
 <template>
     <div class="d-flex flex-column">
-        <v-sheet class="h-auto w-75 ps-2 rounded-lg mb-4 align-self-end">
-            {{ props.message.question }}
-        </v-sheet>
-        <v-sheet class="h-auto w-75 ps-2 rounded-lg mb-4 align-self-start">
-            {{ props.message.response }}
-        </v-sheet>
-        <ChatRenderer v-if="props.message.child" :message="props.message.child!" />
+        <div v-for="x in props.message">
+            <v-sheet class="px-2 rounded-lg mb-4 align-self-end" style="word-wrap: break-word;" max-width="80ch" color="primary">
+                <p>{{ x.userMessage }}</p>
+            </v-sheet>
+            <v-sheet class="px-2 rounded-lg mb-4 align-self-start" style="word-wrap: break-word;" max-width="80ch" color="secondary">
+                <p>{{ x.modelMessage }}</p>
+            </v-sheet>
+        </div>
     </div>
 </template>
