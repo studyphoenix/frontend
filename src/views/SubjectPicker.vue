@@ -171,6 +171,7 @@
             resetCreateDialog();
         } catch ( error ) {
             const errorDetail = error instanceof Error ? error.message : 'Unexpected error.';
+
             createError.value = `${ currentStep }: ${ errorDetail }`;
 
             if ( pendingSubjectId.value !== null ) {
