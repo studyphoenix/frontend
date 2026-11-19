@@ -1,8 +1,9 @@
 <script setup lang="ts">
-    /*import {
+    import {
         type Ref,
-        ref
-    } from 'vue';*/
+        ref,
+        reactive
+    } from 'vue';
 
     import ChatRenderer from '@/components/chat/ChatRenderer.vue';
 
@@ -10,10 +11,24 @@
         ModelChatMessage
     } from '@/ts/types/api';
 
+    let msgc = 2;
     let canSend = true;
+    const compKey = ref(0);
+    const userMessage = ref('');
     const send = () => {
         if (canSend) {
-
+            let msg: ModelChatMessage =
+            {
+                'chatId': 0,//need to actually pick the right value
+                'id': msgc++,
+                'userMessage': userMessage.value,
+                'modelMessage': '',
+                'summary': '',
+                'updatedAt': ''
+            };
+            msgs.push(msg);
+            userMessage.value = '';
+            compKey.value++;
         }
     };
 
@@ -45,9 +60,9 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 
 <template>
     <v-container class="fill-height d-flex flex-column justify-center">
-        <ChatRenderer class="h-100 flex-column d-flex text-body-large" :message="msgs" />
+        <ChatRenderer class="h-100 flex-column d-flex text-body-large" :message="msgs" :key="compKey" />
         <v-sheet class="d-flex ga-2 position-sticky pa-2 bottom-0 border rounded-lg">
-            <v-text-field @keypress.enter="send" label="Ask Anything" />
+            <v-text-field rows="1" autofocus @keypress.enter="send" label="Ask Anything" v-model="userMessage" />
             <v-btn class="align-self-start" icon="mdi-send" @click="send" width="56" height="56" />
         </v-sheet>
     </v-container>
