@@ -1,7 +1,7 @@
 export interface ChatMessagePair {
     'question': string;
     'response': string;
-    'child': ChatMessagePair;
+    'child': ChatMessagePair | null;
 }
 
 /**
