@@ -11,11 +11,26 @@
 
 <template>
     <div class="d-flex flex-column">
-        <div class="d-flex flex-column" v-for="x in props.message" v-bind:key="x.id" v-bind:value="[x.userMessage, x.modelMessage, x.updatedAt, x.summary]">
-            <v-sheet class="px-2 rounded-lg mb-4 align-self-end" style="word-wrap: break-word;" max-width="80ch" color="primary">
+        <div
+            v-for="x in props.message"
+            :key="x.id"
+            class="d-flex flex-column"
+            :value="[x.userMessage, x.modelMessage, x.updatedAt, x.summary]"
+        >
+            <v-sheet
+                class="px-2 rounded-lg mb-4 align-self-end"
+                style="word-wrap: break-word;"
+                max-width="80ch"
+                color="primary"
+            >
                 <p>{{ x.userMessage }}</p>
             </v-sheet>
-            <v-sheet class="px-2 rounded-lg mb-4 align-self-start" style="word-wrap: break-word;" max-width="80ch" color="secondary">
+            <v-sheet
+                class="px-2 rounded-lg mb-4 align-self-start"
+                style="word-wrap: break-word;"
+                max-width="80ch"
+                color="secondary"
+            >
                 <p>{{ x.modelMessage }}</p>
             </v-sheet>
         </div>
