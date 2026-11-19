@@ -11,7 +11,7 @@
 
 <template>
     <div class="d-flex flex-column">
-        <div v-for="x in props.message">
+        <div v-for="x in props.message" :key="props.message.id">
             <v-sheet class="px-2 rounded-lg mb-4 align-self-end" style="word-wrap: break-word;" max-width="80ch" color="primary">
                 <p>{{ x.userMessage }}</p>
             </v-sheet>

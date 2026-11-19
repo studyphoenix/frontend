@@ -3,10 +3,12 @@
         type Ref,
         ref
     } from 'vue';*/
+
+    import ChatRenderer from '@/components/chat/ChatRenderer.vue';
+
     import type {
         ModelChatMessage
     } from '@/ts/types/api';
-    import ChatRenderer from '@/components/chat/ChatRenderer.vue';
 
     let canSend = true;
     const send = () => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-    import SideBar from '@/components/SideBar.vue';
     import ChatView from '@/components/chat/ChatView.vue';
+    import SideBar from '@/components/SideBar.vue';
 </script>
 
 <template>
