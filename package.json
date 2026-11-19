@@ -14,7 +14,7 @@
     },
     "dependencies": {
         "@fontsource/roboto": "^5.2.10",
-        "@janishutz/oidc-login-sdk-browser": "^1.7.2",
+        "@janishutz/oidc-login-sdk-browser": "^1.7.4",
         "@mdi/font": "7.4.47",
         "@vue-flow/core": "^1.48.2",
         "pinia": "^3.0.4",

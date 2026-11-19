@@ -6,6 +6,9 @@ import {
     auth
 } from '@janishutz/oidc-login-sdk-browser';
 import {
+    loadUserProfile
+} from '@/ts/util/user';
+import {
     useAuthStore
 } from '@/stores/authstore';
 
@@ -65,6 +68,8 @@ router.beforeEach( async to => {
             return {
                 'name': 'home'
             };
+        } else {
+            loadUserProfile();
         }
     } else if ( to.name === 'home' && store.isAuth ) {
         return {
