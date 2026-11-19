@@ -37,7 +37,7 @@
                 title="Home"
                 value="home"
                 link
-                href="/"
+                to="/"
             />
             <v-list-item
                 prepend-icon="mdi-chat"
@@ -51,7 +51,7 @@
                 title="Subjects"
                 value="subjects"
                 link
-                href="/subjects"
+                to="/subjects"
             />
             <v-list-item
                 prepend-icon="mdi-sitemap"
