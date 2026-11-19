@@ -5,7 +5,7 @@
     } from 'vue';
     import type {
         ChatMessagePair
-    } from '@/ts/types';
+    } from '@/ts/types/chat';
     import ChatRenderer from '@/components/chat/ChatRenderer.vue';
 
     const msgs: Ref<ChatMessagePair> = ref(
