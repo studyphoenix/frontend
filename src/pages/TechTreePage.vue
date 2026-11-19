@@ -6,7 +6,6 @@
     } from '@vue-flow/core';
     import {
         computed,
-        onMounted,
         ref,
         watch
     } from 'vue';
@@ -26,15 +25,29 @@
         useStateStore
     } from '@/stores/statestore';
     import {
-        useTechTreeStore
-    } from '@/stores/techtree';
+        useTechTree
+    } from '@/composables/techtree';
 
-    const store = useTechTreeStore();
     const stateStore = useStateStore();
-    const graph = computed( () => buildTechTreeGraph( store.subtopics ) );
+    const {
+        subtopics,
+        loading,
+        error,
+        fetchTechTree,
+        createSubtopic
+    } = useTechTree();
+    const graph = computed( () => buildTechTreeGraph( subtopics.value ) );
     const flowInstance = ref<VueFlowStore | null>( null );
     const selectedSubtopic = ref<ModelSubtopic | null>( null );
     const popupOpen = ref( false );
+    const createSubjectDialogOpen = ref( false );
+    const newSubjectName = ref( '' );
+    const creatingSubject = ref( false );
+    const subjectDialogError = ref<string | null>( null );
+    const createSubtopicDialogOpen = ref( false );
+    const newSubtopicName = ref( '' );
+    const creatingSubtopic = ref( false );
+    const subtopicDialogError = ref<string | null>( null );
 
     const handleFlowInit = ( instance: VueFlowStore ) => {
         flowInstance.value = instance;
@@ -50,7 +63,7 @@
         }
 
         selectedSubtopic.value = subtopic;
-        store.selectedSubtopicId = subtopic.id;
+        stateStore.selectedSubtopic = subtopic.id;
         popupOpen.value = true;
     };
 
@@ -66,24 +79,98 @@
         }
 
         localStorage.setItem( 'sp-selected-subject', String( subjectId ) );
-        await store.fetchTechTree( subjectId );
+        await fetchTechTree( subjectId );
+    };
+
+    const openCreateSubjectDialog = () => {
+        newSubjectName.value = '';
+        subjectDialogError.value = null;
+        stateStore.subjectsError = null;
+        createSubjectDialogOpen.value = true;
+    };
+
+    const handleCreateSubject = async () => {
+        const trimmed = newSubjectName.value.replace( /[^\x20-\x7E]/g, '' ).trim();
+
+        if ( trimmed.length < 3 ) {
+            subjectDialogError.value = 'Subject name must be at least 3 ASCII characters.';
+
+            return;
+        }
+
+        subjectDialogError.value = null;
+        creatingSubject.value = true;
+
+        try {
+            const created = await stateStore.createSubject( trimmed );
+
+            if ( created ) {
+                createSubjectDialogOpen.value = false;
+                newSubjectName.value = '';
+            } else {
+                subjectDialogError.value = stateStore.subjectsError ?? 'Failed to create subject';
+            }
+        } finally {
+            creatingSubject.value = false;
+        }
+    };
+
+    const openCreateSubtopicDialog = () => {
+        newSubtopicName.value = '';
+        subtopicDialogError.value = null;
+        error.value = null;
+        createSubtopicDialogOpen.value = true;
+    };
+
+    const handleCreateSubtopic = async () => {
+        if ( stateStore.selectedSubject <= 0 ) {
+            subtopicDialogError.value = 'Select a subject first.';
+
+            return;
+        }
+
+        const trimmed = newSubtopicName.value.replace( /[^\x20-\x7E]/g, '' ).trim();
+
+        if ( trimmed.length < 3 || trimmed.length > 22 ) {
+            subtopicDialogError.value = 'Subtopic name must be between 3 and 22 ASCII characters.';
+
+            return;
+        }
+
+        subtopicDialogError.value = null;
+        creatingSubtopic.value = true;
+
+        try {
+            const created = await createSubtopic( stateStore.selectedSubject, trimmed );
+
+            if ( created ) {
+                createSubtopicDialogOpen.value = false;
+                newSubtopicName.value = '';
+            } else {
+                subtopicDialogError.value = error.value ?? 'Failed to create subtopic';
+            }
+        } finally {
+            creatingSubtopic.value = false;
+        }
     };
 
     watch( () => stateStore.selectedSubject, subjectId => {
         loadSelectedSubject( subjectId );
     } );
 
-    onMounted( async () => {
-        await store.fetchSubjects();
+    const init = async () => {
+        await stateStore.fetchSubjects();
 
-        if ( !Number.isFinite( stateStore.selectedSubject ) || stateStore.selectedSubject <= 0 ) {
-            if ( store.subjects.length > 0 ) {
-                stateStore.selectedSubject = store.subjects[0].id;
-            }
-        } else {
+        const hasValidSelection = stateStore.subjects.some( s => s.id === stateStore.selectedSubject );
+
+        if ( !hasValidSelection && stateStore.subjects.length > 0 ) {
+            stateStore.selectedSubject = stateStore.subjects[0].id;
+        } else if ( hasValidSelection && Number.isFinite( stateStore.selectedSubject ) && stateStore.selectedSubject > 0 ) {
             await loadSelectedSubject( stateStore.selectedSubject );
         }
-    } );
+    };
+
+    void init();
 </script>
 
 <template>
@@ -95,38 +182,72 @@
                 Tech Tree
             </h1>
 
-            <v-select
-                v-if="store.subjects.length > 0"
-                v-model="stateStore.selectedSubject"
-                density="compact"
-                hide-details
-                item-title="name"
-                item-value="id"
-                :items="store.subjects"
-                label="Subject"
-                max-width="280"
-            />
+            <div v-if="stateStore.subjects.length > 0" class="d-flex align-center ga-2">
+                <v-select
+                    v-model="stateStore.selectedSubject"
+                    density="compact"
+                    hide-details
+                    item-title="name"
+                    item-value="id"
+                    :items="stateStore.subjects"
+                    label="Subject"
+                    max-width="280"
+                    min-width="220"
+                />
+                <v-btn
+                    aria-label="Create Subject"
+                    color="on-surface"
+                    density="comfortable"
+                    icon="mdi-plus"
+                    title="Create Subject"
+                    variant="outlined"
+                    @click="openCreateSubjectDialog"
+                />
+            </div>
         </div>
 
         <div class="tree-canvas">
-            <div v-if="store.loading" class="d-flex align-center justify-center fill-height">
+            <div v-if="loading" class="d-flex align-center justify-center fill-height">
                 <v-progress-circular indeterminate />
             </div>
 
             <v-alert
-                v-else-if="store.error"
+                v-else-if="error || stateStore.subjectsError"
+                :icon="false"
                 type="error"
                 variant="tonal"
             >
-                {{ store.error }}
+                {{ error || stateStore.subjectsError }}
             </v-alert>
 
-            <div v-else-if="store.subjects.length === 0" class="d-flex align-center justify-center fill-height text-medium-emphasis">
-                No subjects found yet. Create a subject first.
+            <div
+                v-else-if="stateStore.subjects.length === 0"
+                class="d-flex flex-column align-center justify-center fill-height ga-3 text-medium-emphasis"
+            >
+                <span>No subjects found yet. Create a subject first.</span>
+                <v-btn
+                    color="on-surface"
+                    prepend-icon="mdi-plus"
+                    variant="outlined"
+                    @click="openCreateSubjectDialog"
+                >
+                    Create Subject
+                </v-btn>
             </div>
 
-            <div v-else-if="graph.nodes.length === 0" class="d-flex align-center justify-center fill-height text-medium-emphasis">
-                No subtopics found for this subject yet.
+            <div
+                v-else-if="graph.nodes.length === 0"
+                class="d-flex flex-column align-center justify-center fill-height ga-3 text-medium-emphasis"
+            >
+                <span>No subtopics found for this subject yet.</span>
+                <v-btn
+                    color="on-surface"
+                    prepend-icon="mdi-plus"
+                    variant="outlined"
+                    @click="openCreateSubtopicDialog"
+                >
+                    Create Subtopic
+                </v-btn>
             </div>
 
             <VueFlow
@@ -186,6 +307,142 @@
             v-model="popupOpen"
             :subtopic="selectedSubtopic"
         />
+
+        <v-dialog
+            v-model="createSubjectDialogOpen"
+            max-width="420"
+        >
+            <v-sheet
+                class="pa-5"
+                rounded="lg"
+            >
+                <h3 class="text-h6 font-weight-bold mb-2">
+                    Create Subject
+                </h3>
+                <p class="text-body-2 text-medium-emphasis mb-4">
+                    Add a subject to start building its tech tree.
+                </p>
+
+                <v-alert
+                    v-if="subjectDialogError"
+                    class="mb-4"
+                    closable
+                    density="compact"
+                    :icon="false"
+                    type="error"
+                    variant="tonal"
+                    @click:close="subjectDialogError = null"
+                >
+                    {{ subjectDialogError }}
+
+                    <template #close="{ props: closeProps }">
+                        <v-btn
+                            v-bind="closeProps"
+                            color="error"
+                        />
+                    </template>
+                </v-alert>
+
+                <v-text-field
+                    v-model="newSubjectName"
+                    autofocus
+                    counter="100"
+                    density="compact"
+                    label="Subject name"
+                    maxlength="100"
+                    placeholder="e.g. Linear Algebra"
+                    variant="outlined"
+                    @keyup.enter="handleCreateSubject"
+                />
+
+                <div class="d-flex justify-end ga-2 mt-4">
+                    <v-btn
+                        color="medium-emphasis"
+                        variant="text"
+                        @click="createSubjectDialogOpen = false"
+                    >
+                        Cancel
+                    </v-btn>
+
+                    <v-btn
+                        color="on-surface"
+                        :loading="creatingSubject"
+                        variant="tonal"
+                        @click="handleCreateSubject"
+                    >
+                        Create
+                    </v-btn>
+                </div>
+            </v-sheet>
+        </v-dialog>
+
+        <v-dialog
+            v-model="createSubtopicDialogOpen"
+            max-width="420"
+        >
+            <v-sheet
+                class="pa-5"
+                rounded="lg"
+            >
+                <h3 class="text-h6 font-weight-bold mb-2">
+                    Create Subtopic
+                </h3>
+                <p class="text-body-2 text-medium-emphasis mb-4">
+                    Add a starting subtopic node for this subject.
+                </p>
+
+                <v-alert
+                    v-if="subtopicDialogError"
+                    class="mb-4"
+                    closable
+                    density="compact"
+                    :icon="false"
+                    type="error"
+                    variant="tonal"
+                    @click:close="subtopicDialogError = null"
+                >
+                    {{ subtopicDialogError }}
+
+                    <template #close="{ props: closeProps }">
+                        <v-btn
+                            v-bind="closeProps"
+                            color="error"
+                        />
+                    </template>
+                </v-alert>
+
+                <v-text-field
+                    v-model="newSubtopicName"
+                    autofocus
+                    :counter="22"
+                    density="compact"
+                    label="Subtopic name"
+                    maxlength="22"
+                    placeholder="e.g. Probability Axioms"
+                    variant="outlined"
+                    @keyup.enter="handleCreateSubtopic"
+                />
+
+                <div class="d-flex justify-end ga-2 mt-4">
+                    <v-btn
+                        color="medium-emphasis"
+                        variant="text"
+                        @click="createSubtopicDialogOpen = false"
+                    >
+                        Cancel
+                    </v-btn>
+
+                    <v-btn
+                        color="on-surface"
+                        :loading="creatingSubtopic"
+                        variant="tonal"
+                        @click="handleCreateSubtopic"
+                    >
+                        Create
+                    </v-btn>
+                </div>
+            </v-sheet>
+        </v-dialog>
     </v-container>
 </template>
 

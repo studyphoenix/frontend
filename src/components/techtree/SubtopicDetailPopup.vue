@@ -21,8 +21,8 @@
         useRouter
     } from 'vue-router';
     import {
-        useTechTreeStore
-    } from '@/stores/techtree';
+        useTechTree
+    } from '@/composables/techtree';
 
     interface PendingRemoval {
         'kind': 'chat' | 'asset';
@@ -37,7 +37,16 @@
         'subtopic': ModelSubtopic | null;
     }>();
     const router = useRouter();
-    const store = useTechTreeStore();
+    const {
+        activeSubtopic,
+        subtopicLoading,
+        subtopicError,
+        fetchSubtopicDetails,
+        createAndAttachChat,
+        deleteChat,
+        uploadAndAttachAsset,
+        deleteAsset
+    } = useTechTree();
     const uploadingAsset = ref( false );
     const isDragging = ref( false );
     const fileInput = ref<HTMLInputElement | null>( null );
@@ -48,8 +57,8 @@
     const pendingRemoval = ref<PendingRemoval | null>( null );
     const removingItem = ref( false );
     const detail = computed( () => {
-        if ( store.activeSubtopic && props.subtopic && store.activeSubtopic.id === props.subtopic.id ) {
-            return store.activeSubtopic;
+        if ( activeSubtopic.value && props.subtopic && activeSubtopic.value.id === props.subtopic.id ) {
+            return activeSubtopic.value;
         }
 
         return props.subtopic;
@@ -125,12 +134,12 @@
         if ( open && subtopicId ) {
             newChatDialogOpen.value = false;
             pendingRemoval.value = null;
-            await store.fetchSubtopicDetails( subtopicId );
+            await fetchSubtopicDetails( subtopicId, props.subtopic );
         }
     } );
 
     const openNewChatDialog = () => {
-        store.subtopicError = null;
+        subtopicError.value = null;
         selectedNewMode.value = 1;
         newChatTitle.value = '';
         newChatDialogOpen.value = true;
@@ -151,6 +160,19 @@
         } );
     };
 
+    const getNextDefaultChatTitle = ( label: string, mode: 1 | 2 | 3 ): string => {
+        const existing = new Set( chatsByMode( mode ).map( c => c.name.trim()
+            .toLowerCase() ) );
+
+        let index = 1;
+
+        while ( existing.has( `${ label } #${ index }`.toLowerCase() ) ) {
+            index++;
+        }
+
+        return `${ label } #${ index }`;
+    };
+
     const handleCreateChat = async () => {
         const target = detail.value;
 
@@ -159,10 +181,10 @@
         }
 
         const cfg = getChatModeMeta( selectedNewMode.value );
-        const title = newChatTitle.value.trim() || `${ target.name } - ${ cfg.label }`;
+        const title = newChatTitle.value.trim() || getNextDefaultChatTitle( cfg.label, cfg.mode );
 
         creatingChat.value = true;
-        const created = await store.createAndAttachChat( target.id, title, cfg.mode );
+        const created = await createAndAttachChat( target.id, title, cfg.mode );
 
         creatingChat.value = false;
 
@@ -177,7 +199,7 @@
     };
 
     const askRemoveChat = ( chat: ModelChat ) => {
-        store.subtopicError = null;
+        subtopicError.value = null;
         pendingRemoval.value = {
             'kind': 'chat',
             'id': chat.id,
@@ -186,7 +208,7 @@
     };
 
     const askRemoveAsset = ( asset: ModelAsset ) => {
-        store.subtopicError = null;
+        subtopicError.value = null;
         pendingRemoval.value = {
             'kind': 'asset',
             'id': asset.id,
@@ -206,16 +228,16 @@
 
         try {
             if ( item.kind === 'chat' ) {
-                await store.deleteChat( target.id, item.id );
+                await deleteChat( target.id, item.id );
             } else {
-                await store.deleteAsset( target.id, item.id );
+                await deleteAsset( target.id, item.id );
             }
 
-            if ( !store.subtopicError ) {
+            if ( !subtopicError.value ) {
                 pendingRemoval.value = null;
             }
         } catch ( err ) {
-            store.subtopicError = err instanceof Error ? err.message : 'Delete failed';
+            subtopicError.value = err instanceof Error ? err.message : 'Delete failed';
         } finally {
             removingItem.value = false;
         }
@@ -229,7 +251,7 @@
         }
 
         uploadingAsset.value = true;
-        await store.uploadAndAttachAsset( target.id, file );
+        await uploadAndAttachAsset( target.id, file );
         uploadingAsset.value = false;
     };
 
@@ -290,19 +312,27 @@
             <v-divider class="my-4" />
 
             <v-alert
-                v-if="store.subtopicError"
+                v-if="subtopicError"
                 class="mb-4"
                 closable
                 density="compact"
+                :icon="false"
                 type="error"
                 variant="tonal"
-                @click:close="store.subtopicError = null"
+                @click:close="subtopicError = null"
             >
-                {{ store.subtopicError }}
+                {{ subtopicError }}
+
+                <template #close="{ props: closeProps }">
+                    <v-btn
+                        v-bind="closeProps"
+                        color="error"
+                    />
+                </template>
             </v-alert>
 
             <div
-                v-if="store.subtopicLoading"
+                v-if="subtopicLoading"
                 class="d-flex align-center justify-center py-8"
             >
                 <v-progress-circular indeterminate />
@@ -519,15 +549,23 @@
             </v-list>
 
             <v-alert
-                v-if="store.subtopicError"
+                v-if="subtopicError"
                 class="mb-4"
                 closable
                 density="compact"
+                :icon="false"
                 type="error"
                 variant="tonal"
-                @click:close="store.subtopicError = null"
+                @click:close="subtopicError = null"
             >
-                {{ store.subtopicError }}
+                {{ subtopicError }}
+
+                <template #close="{ props: closeProps }">
+                    <v-btn
+                        v-bind="closeProps"
+                        color="error"
+                    />
+                </template>
             </v-alert>
 
             <v-text-field
@@ -576,15 +614,23 @@
             </p>
 
             <v-alert
-                v-if="store.subtopicError"
+                v-if="subtopicError"
                 class="mb-4"
                 closable
                 density="compact"
+                :icon="false"
                 type="error"
                 variant="tonal"
-                @click:close="store.subtopicError = null"
+                @click:close="subtopicError = null"
             >
-                {{ store.subtopicError }}
+                {{ subtopicError }}
+
+                <template #close="{ props: closeProps }">
+                    <v-btn
+                        v-bind="closeProps"
+                        color="error"
+                    />
+                </template>
             </v-alert>
 
             <div class="d-flex justify-end ga-2">

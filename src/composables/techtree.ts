@@ -2,12 +2,11 @@ import type {
     ControllerCreatedResponse,
     ModelAsset,
     ModelChat,
-    ModelSubject,
     ModelSubtopic
 } from '@/ts/types/api';
 import {
-    defineStore
-} from 'pinia';
+    createSampleSubtopics
+} from './techtree-sample';
 import {
     ref
 } from 'vue';
@@ -59,123 +58,14 @@ const toAsciiName = ( raw: string, fallback: string ): string => {
     return cleaned.slice( 0, 100 );
 };
 
-const patchJson = ( path: string, payload: unknown ): Promise<Response> => {
-    const targetUrl = new URL( path, request.getBackendURL() );
-
-    return fetch( targetUrl, {
-        'method': 'PATCH',
-        'credentials': 'include',
-        'headers': {
-            'Content-Type': 'application/json'
-        },
-        'body': JSON.stringify( payload )
-    } );
-};
-
-const createSampleSubtopics = (): ModelSubtopic[] => {
-    const discrete: ModelSubtopic = {
-        'id': 2,
-        'name': 'Discrete Distributions',
-        'icon': '',
-        'progress': 100,
-        'updatedAt': '2026-11-12T00:00:00Z'
-    };
-    const continuous: ModelSubtopic = {
-        'id': 3,
-        'name': 'Continuous Variables',
-        'icon': '',
-        'progress': 60,
-        'updatedAt': '2026-11-12T00:00:00Z'
-    };
-    const expectation: ModelSubtopic = {
-        'id': 4,
-        'name': 'Expectation & Variance',
-        'icon': '',
-        'progress': 25,
-        'updatedAt': '2026-11-12T00:00:00Z'
-    };
-    const joint: ModelSubtopic = {
-        'id': 5,
-        'name': 'Joint Distributions',
-        'icon': '',
-        'progress': 0,
-        'updatedAt': '2026-11-12T00:00:00Z'
-    };
-    const clt: ModelSubtopic = {
-        'id': 6,
-        'name': 'Central Limit Theorem',
-        'icon': '',
-        'progress': 0,
-        'updatedAt': '2026-11-12T00:00:00Z'
-    };
-
-    return [
-        {
-            'id': 1,
-            'name': 'Probability Axioms',
-            'icon': '',
-            'progress': 100,
-            'updatedAt': '2026-11-12T00:00:00Z',
-            'children': [
-                discrete,
-                continuous
-            ]
-        },
-        {
-            ...discrete,
-            'children': [ expectation ]
-        },
-        {
-            ...continuous,
-            'children': [
-                expectation,
-                joint
-            ]
-        },
-        {
-            ...expectation,
-            'children': [ clt ]
-        },
-        joint,
-        clt
-    ];
-};
-
-export const useTechTreeStore = defineStore( 'techtree', () => {
+export const useTechTree = () => {
     const isBackendless = import.meta.env.VITE_BACKENDLESS === 'true';
-    const subjects = ref<ModelSubject[]>( [] );
     const subtopics = ref<ModelSubtopic[]>( [] );
-    const selectedSubtopicId = ref<number | null>( null );
     const activeSubtopic = ref<ModelSubtopic | null>( null );
     const loading = ref( false );
     const error = ref<string | null>( null );
     const subtopicLoading = ref( false );
     const subtopicError = ref<string | null>( null );
-
-    const fetchSubjects = async () => {
-        if ( isBackendless ) {
-            subjects.value = [ {
-                'id': 1,
-                'name': 'Probability & Statistics',
-                'icon': 'mdi-chart-bell-curve',
-                'updatedAt': '2026-11-12T00:00:00Z'
-            } ];
-
-            return;
-        }
-
-        error.value = null;
-
-        try {
-            const response = await request.get( '/subjects/search' );
-            const data = await response.json();
-
-            subjects.value = Array.isArray( data ) ? data : [];
-        } catch ( err ) {
-            error.value = err instanceof Error ? err.message : 'Failed to load subjects';
-            subjects.value = [];
-        }
-    };
 
     const fetchTechTree = async ( subjectId: number ) => {
         if ( isBackendless ) {
@@ -188,7 +78,7 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
         error.value = null;
 
         try {
-            const response = await request.get( `/subjects/techtree/${ subjectId }` );
+            const response = await request.get( `/subjects/techtree/get/${ subjectId }` );
             const data = await response.json();
 
             subtopics.value = Array.isArray( data ) ? data : [];
@@ -200,11 +90,67 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
         }
     };
 
-    const fetchSubtopicDetails = async ( subtopicId: number ) => {
+    const createSubtopic = async ( subjectId: number, name: string ): Promise<ModelSubtopic | null> => {
+        const cleanName = name.replace( /[^\x20-\x7E]/g, '' ).trim()
+            .slice( 0, 22 );
+
+        if ( cleanName.length < 3 ) {
+            error.value = 'Subtopic name must be at least 3 ASCII characters.';
+
+            return null;
+        }
+
+        error.value = null;
+
+        if ( isBackendless ) {
+            const mockSubtopic: ModelSubtopic = {
+                'id': Date.now(),
+                'name': cleanName,
+                'icon': 'mdi-sitemap',
+                'progress': 0,
+                'updatedAt': new Date().toISOString()
+            };
+
+            subtopics.value = [
+                ...subtopics.value,
+                mockSubtopic
+            ];
+
+            return mockSubtopic;
+        }
+
+        try {
+            const createRes = await request.put(
+                '/subtopics/create',
+                JSON.stringify( {
+                    'name': cleanName,
+                    'icon': 'mdi-sitemap',
+                    'subject': subjectId,
+                    'progress': 0
+                } )
+            );
+
+            if ( !createRes.ok ) {
+                throw new Error( `Failed to create subtopic (${ createRes.status })` );
+            }
+
+            const created = await createRes.json() as ControllerCreatedResponse;
+
+            await fetchTechTree( subjectId );
+
+            return subtopics.value.find( st => st.id === created.id ) ?? null;
+        } catch ( err ) {
+            error.value = err instanceof Error ? err.message : 'Failed to create subtopic';
+
+            return null;
+        }
+    };
+
+    const fetchSubtopicDetails = async ( subtopicId: number, fallbackSubtopic?: ModelSubtopic | null ) => {
         subtopicError.value = null;
 
         if ( isBackendless ) {
-            const found = subtopics.value.find( st => st.id === subtopicId ) ?? null;
+            const found = fallbackSubtopic ?? subtopics.value.find( st => st.id === subtopicId ) ?? null;
 
             activeSubtopic.value = found
                 ? {
@@ -278,9 +224,9 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
             }
 
             const created = await createRes.json() as ControllerCreatedResponse;
-            const assocRes = await patchJson(
+            const assocRes = await request.patch(
                 `/subtopics/associate/chats/${ subtopicId }`,
-                [ created.id ]
+                JSON.stringify( [ created.id ] )
             );
 
             if ( !assocRes.ok ) {
@@ -301,11 +247,7 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
         subtopicError.value = null;
 
         try {
-            const targetUrl = new URL( endpoint, request.getBackendURL() );
-            const res = await fetch( targetUrl, {
-                'method': 'DELETE',
-                'credentials': 'include'
-            } );
+            const res = await request.deleteRequest( endpoint );
 
             if ( !res.ok ) {
                 throw new Error( `Failed to delete ${ label } (${ res.status })` );
@@ -392,9 +334,9 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
                 throw new Error( `Failed to upload file (${ uploadRes.status })` );
             }
 
-            const assocRes = await patchJson(
+            const assocRes = await request.patch(
                 `/subtopics/associate/assets/${ subtopicId }`,
-                [ created.id ]
+                JSON.stringify( [ created.id ] )
             );
 
             if ( !assocRes.ok ) {
@@ -424,20 +366,18 @@ export const useTechTreeStore = defineStore( 'techtree', () => {
     };
 
     return {
-        subjects,
         subtopics,
-        selectedSubtopicId,
         activeSubtopic,
         loading,
         error,
         subtopicLoading,
         subtopicError,
-        fetchSubjects,
         fetchTechTree,
+        createSubtopic,
         fetchSubtopicDetails,
         createAndAttachChat,
         deleteChat,
         uploadAndAttachAsset,
         deleteAsset
     };
-} );
+};
