@@ -1,8 +1,4 @@
 <script setup lang="ts">
-    import {
-        CHAT_MODES,
-        getChatModeMeta
-    } from '@/ts/util/chat-modes';
     import type {
         ModelAsset,
         ModelChat,
@@ -13,6 +9,11 @@
         ref,
         watch
     } from 'vue';
+    import {
+        CHAT_MODES
+    } from '@/ts/util/chat-modes';
+    import ConfirmDeleteDialog from '@/components/custom-ui-elements/ConfirmDeleteDialog.vue';
+    import NewChatDialog from '@/components/techtree/NewChatDialog.vue';
     import PopupElement from '@/components/custom-ui-elements/PopupElement.vue';
     import {
         request
@@ -51,8 +52,6 @@
     const isDragging = ref( false );
     const fileInput = ref<HTMLInputElement | null>( null );
     const newChatDialogOpen = ref( false );
-    const selectedNewMode = ref<1 | 2 | 3>( 1 );
-    const newChatTitle = ref( '' );
     const creatingChat = ref( false );
     const pendingRemoval = ref<PendingRemoval | null>( null );
     const removingItem = ref( false );
@@ -109,6 +108,7 @@
             }
         }
     } );
+    const confirmMessage = computed( () => `Are you sure you want to delete "${ pendingRemoval.value?.name ?? '' }"?` );
 
     const formatMediaBadge = ( mediaType: string ): string => {
         const sub = mediaType.split( '/' ).pop() ?? 'file';
@@ -140,8 +140,6 @@
 
     const openNewChatDialog = () => {
         subtopicError.value = null;
-        selectedNewMode.value = 1;
-        newChatTitle.value = '';
         newChatDialogOpen.value = true;
     };
 
@@ -160,36 +158,22 @@
         } );
     };
 
-    const getNextDefaultChatTitle = ( label: string, mode: 1 | 2 | 3 ): string => {
-        const existing = new Set( chatsByMode( mode ).map( c => c.name.trim()
-            .toLowerCase() ) );
-
-        let index = 1;
-
-        while ( existing.has( `${ label } #${ index }`.toLowerCase() ) ) {
-            index++;
-        }
-
-        return `${ label } #${ index }`;
-    };
-
-    const handleCreateChat = async () => {
+    const handleCreateChat = async ( payload: {
+        'title': string;
+        'mode': 1 | 2 | 3;
+    } ) => {
         const target = detail.value;
 
         if ( !target ) {
             return;
         }
 
-        const cfg = getChatModeMeta( selectedNewMode.value );
-        const title = newChatTitle.value.trim() || getNextDefaultChatTitle( cfg.label, cfg.mode );
-
         creatingChat.value = true;
-        const created = await createAndAttachChat( target.id, title, cfg.mode );
+        const created = await createAndAttachChat( target.id, payload.title, payload.mode );
 
         creatingChat.value = false;
 
         if ( created ) {
-            newChatTitle.value = '';
             navigateToChat( created );
         }
     };
@@ -515,144 +499,25 @@
         </div>
     </PopupElement>
 
-    <v-dialog
+    <NewChatDialog
         v-model="newChatDialogOpen"
-        max-width="440"
-    >
-        <v-sheet
-            class="pa-5"
-            rounded="lg"
-        >
-            <h3 class="text-h6 font-weight-bold mb-1">
-                New Chat
-            </h3>
-            <p class="text-body-2 text-medium-emphasis mb-4">
-                Choose a learning mode for {{ detail?.name ?? 'this subtopic' }}.
-            </p>
+        :error="subtopicError"
+        :existing-chats="detail?.chats ?? []"
+        :loading="creatingChat"
+        :subtopic-name="detail?.name ?? 'this subtopic'"
+        @clear-error="subtopicError = null"
+        @create="handleCreateChat"
+    />
 
-            <v-list
-                class="bg-transparent py-0 mb-4"
-                density="comfortable"
-                lines="two"
-            >
-                <v-list-item
-                    v-for="cfg in CHAT_MODES"
-                    :key="cfg.mode"
-                    :active="selectedNewMode === cfg.mode"
-                    class="mode-option rounded mb-2"
-                    color="on-surface"
-                    :prepend-icon="cfg.icon"
-                    :subtitle="cfg.description"
-                    :title="`${ cfg.label } Mode`"
-                    @click="selectedNewMode = cfg.mode"
-                />
-            </v-list>
-
-            <v-alert
-                v-if="subtopicError"
-                class="mb-4"
-                closable
-                density="compact"
-                :icon="false"
-                type="error"
-                variant="tonal"
-                @click:close="subtopicError = null"
-            >
-                {{ subtopicError }}
-
-                <template #close="{ props: closeProps }">
-                    <v-btn
-                        v-bind="closeProps"
-                        color="error"
-                    />
-                </template>
-            </v-alert>
-
-            <v-text-field
-                v-model="newChatTitle"
-                density="compact"
-                hide-details
-                label="Chat title (optional)"
-                variant="outlined"
-                @keyup.enter="handleCreateChat"
-            />
-
-            <div class="d-flex justify-end ga-2 mt-5">
-                <v-btn
-                    color="medium-emphasis"
-                    variant="text"
-                    @click="newChatDialogOpen = false"
-                >
-                    Cancel
-                </v-btn>
-
-                <v-btn
-                    color="on-surface"
-                    :loading="creatingChat"
-                    variant="tonal"
-                    @click="handleCreateChat"
-                >
-                    Start Chat
-                </v-btn>
-            </div>
-        </v-sheet>
-    </v-dialog>
-
-    <v-dialog
+    <ConfirmDeleteDialog
         v-model="confirmDialogOpen"
-        max-width="400"
-    >
-        <v-sheet
-            class="pa-5"
-            rounded="lg"
-        >
-            <h3 class="text-h6 font-weight-bold mb-2">
-                Delete {{ pendingRemoval?.kind === 'chat' ? 'chat' : 'asset' }}?
-            </h3>
-            <p class="text-body-2 text-medium-emphasis mb-5">
-                Are you sure you want to delete "{{ pendingRemoval?.name }}"?
-            </p>
-
-            <v-alert
-                v-if="subtopicError"
-                class="mb-4"
-                closable
-                density="compact"
-                :icon="false"
-                type="error"
-                variant="tonal"
-                @click:close="subtopicError = null"
-            >
-                {{ subtopicError }}
-
-                <template #close="{ props: closeProps }">
-                    <v-btn
-                        v-bind="closeProps"
-                        color="error"
-                    />
-                </template>
-            </v-alert>
-
-            <div class="d-flex justify-end ga-2">
-                <v-btn
-                    color="medium-emphasis"
-                    variant="text"
-                    @click="pendingRemoval = null"
-                >
-                    Cancel
-                </v-btn>
-
-                <v-btn
-                    color="error"
-                    :loading="removingItem"
-                    variant="tonal"
-                    @click="confirmRemove"
-                >
-                    Delete
-                </v-btn>
-            </div>
-        </v-sheet>
-    </v-dialog>
+        :error="subtopicError"
+        :loading="removingItem"
+        :message="confirmMessage"
+        :title="`Delete ${ pendingRemoval?.kind === 'chat' ? 'chat' : 'asset' }?`"
+        @clear-error="subtopicError = null"
+        @confirm="confirmRemove"
+    />
 </template>
 
 <style scoped lang="scss">
@@ -681,9 +546,5 @@
             outline: 1px dashed rgba(var(--v-theme-primary), 0.6);
             outline-offset: 6px;
         }
-    }
-
-    .mode-option {
-        border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     }
 </style>

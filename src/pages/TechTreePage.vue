@@ -9,6 +9,8 @@
         ref,
         watch
     } from 'vue';
+    import CreateSubjectDialog from '@/components/techtree/CreateSubjectDialog.vue';
+    import CreateSubtopicDialog from '@/components/techtree/CreateSubtopicDialog.vue';
     import type {
         ModelSubtopic
     } from '@/ts/types/api';
@@ -41,13 +43,7 @@
     const selectedSubtopic = ref<ModelSubtopic | null>( null );
     const popupOpen = ref( false );
     const createSubjectDialogOpen = ref( false );
-    const newSubjectName = ref( '' );
-    const creatingSubject = ref( false );
-    const subjectDialogError = ref<string | null>( null );
     const createSubtopicDialogOpen = ref( false );
-    const newSubtopicName = ref( '' );
-    const creatingSubtopic = ref( false );
-    const subtopicDialogError = ref<string | null>( null );
 
     const handleFlowInit = ( instance: VueFlowStore ) => {
         flowInstance.value = instance;
@@ -83,75 +79,12 @@
     };
 
     const openCreateSubjectDialog = () => {
-        newSubjectName.value = '';
-        subjectDialogError.value = null;
-        stateStore.subjectsError = null;
         createSubjectDialogOpen.value = true;
     };
 
-    const handleCreateSubject = async () => {
-        const trimmed = newSubjectName.value.replace( /[^\x20-\x7E]/g, '' ).trim();
-
-        if ( trimmed.length < 3 ) {
-            subjectDialogError.value = 'Subject name must be at least 3 ASCII characters.';
-
-            return;
-        }
-
-        subjectDialogError.value = null;
-        creatingSubject.value = true;
-
-        try {
-            const created = await stateStore.createSubject( trimmed );
-
-            if ( created ) {
-                createSubjectDialogOpen.value = false;
-                newSubjectName.value = '';
-            } else {
-                subjectDialogError.value = stateStore.subjectsError ?? 'Failed to create subject';
-            }
-        } finally {
-            creatingSubject.value = false;
-        }
-    };
-
     const openCreateSubtopicDialog = () => {
-        newSubtopicName.value = '';
-        subtopicDialogError.value = null;
         error.value = null;
         createSubtopicDialogOpen.value = true;
-    };
-
-    const handleCreateSubtopic = async () => {
-        if ( stateStore.selectedSubject <= 0 ) {
-            subtopicDialogError.value = 'Select a subject first.';
-
-            return;
-        }
-
-        const trimmed = newSubtopicName.value.replace( /[^\x20-\x7E]/g, '' ).trim();
-
-        if ( trimmed.length < 3 || trimmed.length > 22 ) {
-            subtopicDialogError.value = 'Subtopic name must be between 3 and 22 ASCII characters.';
-
-            return;
-        }
-
-        subtopicDialogError.value = null;
-        creatingSubtopic.value = true;
-
-        try {
-            const created = await createSubtopic( stateStore.selectedSubject, trimmed );
-
-            if ( created ) {
-                createSubtopicDialogOpen.value = false;
-                newSubtopicName.value = '';
-            } else {
-                subtopicDialogError.value = error.value ?? 'Failed to create subtopic';
-            }
-        } finally {
-            creatingSubtopic.value = false;
-        }
     };
 
     watch( () => stateStore.selectedSubject, subjectId => {
@@ -170,7 +103,7 @@
         }
     };
 
-    void init();
+    init();
 </script>
 
 <template>
@@ -308,141 +241,14 @@
             :subtopic="selectedSubtopic"
         />
 
-        <v-dialog
-            v-model="createSubjectDialogOpen"
-            max-width="420"
-        >
-            <v-sheet
-                class="pa-5"
-                rounded="lg"
-            >
-                <h3 class="text-h6 font-weight-bold mb-2">
-                    Create Subject
-                </h3>
-                <p class="text-body-2 text-medium-emphasis mb-4">
-                    Add a subject to start building its tech tree.
-                </p>
+        <CreateSubjectDialog v-model="createSubjectDialogOpen" />
 
-                <v-alert
-                    v-if="subjectDialogError"
-                    class="mb-4"
-                    closable
-                    density="compact"
-                    :icon="false"
-                    type="error"
-                    variant="tonal"
-                    @click:close="subjectDialogError = null"
-                >
-                    {{ subjectDialogError }}
-
-                    <template #close="{ props: closeProps }">
-                        <v-btn
-                            v-bind="closeProps"
-                            color="error"
-                        />
-                    </template>
-                </v-alert>
-
-                <v-text-field
-                    v-model="newSubjectName"
-                    autofocus
-                    counter="100"
-                    density="compact"
-                    label="Subject name"
-                    maxlength="100"
-                    placeholder="e.g. Linear Algebra"
-                    variant="outlined"
-                    @keyup.enter="handleCreateSubject"
-                />
-
-                <div class="d-flex justify-end ga-2 mt-4">
-                    <v-btn
-                        color="medium-emphasis"
-                        variant="text"
-                        @click="createSubjectDialogOpen = false"
-                    >
-                        Cancel
-                    </v-btn>
-
-                    <v-btn
-                        color="on-surface"
-                        :loading="creatingSubject"
-                        variant="tonal"
-                        @click="handleCreateSubject"
-                    >
-                        Create
-                    </v-btn>
-                </div>
-            </v-sheet>
-        </v-dialog>
-
-        <v-dialog
+        <CreateSubtopicDialog
             v-model="createSubtopicDialogOpen"
-            max-width="420"
-        >
-            <v-sheet
-                class="pa-5"
-                rounded="lg"
-            >
-                <h3 class="text-h6 font-weight-bold mb-2">
-                    Create Subtopic
-                </h3>
-                <p class="text-body-2 text-medium-emphasis mb-4">
-                    Add a starting subtopic node for this subject.
-                </p>
-
-                <v-alert
-                    v-if="subtopicDialogError"
-                    class="mb-4"
-                    closable
-                    density="compact"
-                    :icon="false"
-                    type="error"
-                    variant="tonal"
-                    @click:close="subtopicDialogError = null"
-                >
-                    {{ subtopicDialogError }}
-
-                    <template #close="{ props: closeProps }">
-                        <v-btn
-                            v-bind="closeProps"
-                            color="error"
-                        />
-                    </template>
-                </v-alert>
-
-                <v-text-field
-                    v-model="newSubtopicName"
-                    autofocus
-                    :counter="22"
-                    density="compact"
-                    label="Subtopic name"
-                    maxlength="22"
-                    placeholder="e.g. Probability Axioms"
-                    variant="outlined"
-                    @keyup.enter="handleCreateSubtopic"
-                />
-
-                <div class="d-flex justify-end ga-2 mt-4">
-                    <v-btn
-                        color="medium-emphasis"
-                        variant="text"
-                        @click="createSubtopicDialogOpen = false"
-                    >
-                        Cancel
-                    </v-btn>
-
-                    <v-btn
-                        color="on-surface"
-                        :loading="creatingSubtopic"
-                        variant="tonal"
-                        @click="handleCreateSubtopic"
-                    >
-                        Create
-                    </v-btn>
-                </div>
-            </v-sheet>
-        </v-dialog>
+            :create-subtopic="createSubtopic"
+            :external-error="error"
+            :subject-id="stateStore.selectedSubject"
+        />
     </v-container>
 </template>
 
