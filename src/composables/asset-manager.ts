@@ -1,7 +1,6 @@
 import {
     type Ref,
-    ref,
-    watch
+    ref
 } from 'vue';
 import type {
     ModelAsset
@@ -9,8 +8,6 @@ import type {
 import {
     request
 } from '@janishutz/oidc-login-sdk-browser';
-
-type cbFn = ( assetId?: number ) => void;
 
 export const showAssetManager = ref( false );
 
@@ -20,7 +17,7 @@ export const showAddAsset = ref( false );
 
 export const assetsList: Ref<ModelAsset[]> = ref( [] );
 
-export const selectedIdx = ref( -1 );
+export const selectedAssetId = ref( -1 );
 
 /** (re)load assets from the backend */
 export const loadAssets = async () => {
@@ -46,27 +43,7 @@ export const deleteAsset = async ( id: number ) => {
 export const openAssetManager = ( mode?: 'select' | 'default' ) => {
     assetManagerMode.value = mode ?? 'default';
     showAssetManager.value = true;
-    selectedIdx.value = -1;
-    const listeners: cbFn[] = [];
-
-    /**
-     * Add an event listener for the selection of an asset
-     * @param cb - Callback function receiving the asset id or undefined upon closing the interface
-     */
-    const addEventListener = ( cb: cbFn ) => {
-        listeners.push( cb );
-    };
-
-    watch( selectedIdx, () => {
-        if ( selectedIdx.value > -1 ) {
-            listeners.forEach( val => val( selectedIdx.value ) );
-        }
-    } );
+    selectedAssetId.value = -1;
 
     loadAssets();
-
-    return {
-        addEventListener,
-        loadAssets
-    };
 };

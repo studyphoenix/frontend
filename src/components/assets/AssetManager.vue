@@ -1,8 +1,9 @@
 <script setup lang="ts">
     import {
+        assetManagerMode,
         assetsList,
         deleteAsset,
-        selectedIdx as selectedAssetId,
+        selectedAssetId,
         showAddAsset,
         showAssetManager
     } from '@/composables/asset-manager';
@@ -14,7 +15,15 @@
     };
 
     const handleClick = ( assetId: number ) => {
-        selectedAssetId.value = assetId;
+        if ( assetManagerMode.value === 'select' ) {
+            selectedAssetId.value = assetId;
+        }
+    };
+
+    const select = () => {
+        document.dispatchEvent( new CustomEvent( 'studyphoenix:assets:select', {
+            'detail': selectedAssetId.value
+        } ) );
     };
 </script>
 
@@ -26,7 +35,7 @@
             <div
                 v-for="(asset, index) in assetsList"
                 :key="index"
-                class="bg-surface-variant"
+                :class="['bg-surface-variant', selectedAssetId === index ? 'selected' : undefined]"
                 @click="() => handleClick( asset.id )"
             >
                 <v-icon :icon="asset.icon" />
@@ -40,6 +49,9 @@
                 <v-icon icon="mdi-plus" />
             </div>
         </div>
+        <v-btn v-if="assetManagerMode === 'select'" @click="select">
+            Select
+        </v-btn>
     </PopupElement>
 </template>
 
