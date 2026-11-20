@@ -7,6 +7,11 @@
  * ---------------------------------------------------------------
  */
 
+export interface ControllerCreatedResponse {
+    /** @example 0 */
+    'id': number;
+}
+
 export interface ControllerUserProfileResponse {
     /** @example "jane.doe@example.com" */
     'email': string;

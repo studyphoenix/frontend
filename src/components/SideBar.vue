@@ -51,7 +51,7 @@
                 title="Subjects"
                 value="subjects"
                 link
-                href="/subjects"
+                :to="{ 'name': 'subject-picker' }"
             />
         </v-list>
         <template #append>

@@ -26,6 +26,24 @@ const router = createRouter( {
                 'title': 'App',
                 'auth': true
             }
+        },
+        {
+            'path': '/subjects',
+            'name': 'subject-picker',
+            'component': () => import( '@/components/subjects/SubjectPicker.vue' ),
+            'meta': {
+                'title': 'Subjects',
+                'auth': true
+            }
+        },
+        {
+            'path': '/subjects/tree',
+            'name': 'subject-tree',
+            'component': () => import( '@/components/subjects/SubjectTree.vue' ),
+            'meta': {
+                'title': 'Subject',
+                'auth': true
+            }
         }
     ]
 } );
