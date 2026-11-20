@@ -39,7 +39,7 @@
     <CreateAssetDialog v-model="showAddAsset" />
     <PopupElement v-model="showAssetManager" :show-close="true" :max-width="1500">
         <h1>Assets</h1>
-        <div class="assets-list">
+        <div class="assets-list cursor-pointer">
             <div
                 v-for="(asset, index) in assetsList"
                 :key="index"
@@ -54,7 +54,7 @@
                 </div>
             </div>
             <div class="bg-surface-variant cursor-pointer" @click="openCreateAssetDialog">
-                <v-icon icon="mdi-plus" />
+                <v-icon icon="mdi-plus" style="font-size: 175px;" />
             </div>
         </div>
         <v-btn v-if="assetManagerMode === 'select'" @click="select">

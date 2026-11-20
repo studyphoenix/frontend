@@ -49,3 +49,29 @@ export const openAssetManager = ( mode?: 'select' | 'default' ) => {
 
     loadAssets();
 };
+
+export const getIconForMediaType = ( mediaType: string ) => {
+    if ( iconMap[mediaType] ) {
+        return iconMap[mediaType];
+    } else {
+        return 'mdi-file-question';
+    }
+};
+
+const iconMap: Record<string, string> = {
+    'application/pdf': 'mdi-file-document-multiple',
+    'application/msword': 'mdi-file-document-multiple',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'mdi-file-document-multiple',
+    'application/vnd.oasis.opendocument.text': 'mdi-file-document-multiple',
+    'application/vnd.oasis.opendocument.spreadsheet': 'mdi-file-delimited',
+    'application/vnd.oasis.opendocument.presentation': 'mdi-presentation-play',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'mdi-presentation-play',
+    'application/gif': 'mdi-file-image',
+    'application/jpeg': 'mdi-file-image',
+    'application/png': 'mdi-file-image',
+    'application/json': 'mdi-file-code',
+    'text/markdown': 'mdi-file-code',
+    'text/css': 'mdi-file-code',
+    'text/javascript': 'mdi-file-code',
+    'text/plain': 'mdi-note-text'
+};

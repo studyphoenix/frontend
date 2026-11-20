@@ -5,6 +5,7 @@
         watch
     } from 'vue';
     import {
+        getIconForMediaType,
         loadAssets
     } from '@/composables/asset-manager';
     import {
@@ -44,7 +45,7 @@
         try {
             const res = await request.put( '/assets/create', JSON.stringify( {
                 'name': name.value,
-                'icon': 'mdi-folder',
+                'icon': getIconForMediaType( files.value[0].type ),
                 'mediaType': files.value[0].type
             } ) );
 
