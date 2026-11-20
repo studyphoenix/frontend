@@ -14,6 +14,11 @@
     let originalPos = -1;
     let parentWidth = -1;
 
+    const props = defineProps<{
+        'minSplit'?: number;
+        'maxSplit'?: number;
+    }>();
+
     const startResize = ( ev: MouseEvent ) => {
         isResizing.value = true;
         startPos = ev.x;
@@ -26,7 +31,7 @@
 
         const offset = ( ev.x - startPos ) / parentWidth * 100;
 
-        splitPosition.value = originalPos + offset;
+        splitPosition.value = Math.max( props.minSplit ?? 0, Math.min( props.maxSplit ?? 100, originalPos + offset ) );
     };
 
     const endResize = () => {
