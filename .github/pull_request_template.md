@@ -1,6 +1,11 @@
 **Description**
 
 
+**Linked Issues**
+List all related issues here. If they are to be closed upon merging of this PR, then:
+- fixes #issue-id
+
+
 **Breaking changes**
 List all breaking changes here
 
@@ -21,3 +26,5 @@ AI was used to
 - [ ] to audit the content of the PR
 - [ ] polish writing
 - [ ] ...
+
+*If the checks are pending for more than 5 minutes, they have uploaded a fixed version of your code and you need to push any change to restart them*
