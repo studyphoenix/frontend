@@ -28,7 +28,9 @@ export const loadAssets = async () => {
     }
 };
 
-export const deleteAsset = async ( id: number ) => {
+export const deleteAsset = async ( ev: MouseEvent, id: number ) => {
+    ev.stopPropagation();
+
     if ( confirm( 'Do you really want to delete this asset?' ) ) {
         try {
             await request.deleteRequest( `/assets/delete/${ id }` );

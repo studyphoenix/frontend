@@ -9,6 +9,9 @@
     } from '@/composables/asset-manager';
     import CreateAssetDialog from './CreateAssetDialog.vue';
     import PopupElement from '../custom-ui-elements/PopupElement.vue';
+    import {
+        request
+    } from '@janishutz/oidc-login-sdk-browser';
 
     const openCreateAssetDialog = () => {
         showAddAsset.value = true;
@@ -17,6 +20,11 @@
     const handleClick = ( assetId: number ) => {
         if ( assetManagerMode.value === 'select' ) {
             selectedAssetId.value = assetId;
+        } else {
+            const url = request.getBackendURL();
+
+            url.pathname = '/assets/download/' + assetId;
+            window.open( url );
         }
     };
 
@@ -42,7 +50,7 @@
                 <h3>{{ asset.name }}</h3>
                 <div>
                     <p>{{ new Date( asset.updatedAt ).toLocaleString() }}</p>
-                    <v-icon icon="mdi-delete" @click="() => deleteAsset( asset.id )" />
+                    <v-icon icon="mdi-delete" @click="( ev: MouseEvent ) => deleteAsset( ev, asset.id )" />
                 </div>
             </div>
             <div class="bg-surface-variant cursor-pointer" @click="openCreateAssetDialog">
