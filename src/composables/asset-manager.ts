@@ -19,6 +19,14 @@ export const assetsList: Ref<ModelAsset[]> = ref( [] );
 
 export const selectedAssetId = ref( -1 );
 
+export const showDeleteAssetConfirmation = ref( false );
+
+export const isDeletingAsset = ref( false );
+
+export const assetDeleteError = ref( '' );
+
+let assetToDeleteId = -1;
+
 /** (re)load assets from the backend */
 export const loadAssets = async () => {
     try {
@@ -30,16 +38,33 @@ export const loadAssets = async () => {
 
 export const deleteAsset = async ( ev: MouseEvent, id: number ) => {
     ev.stopPropagation();
+    showDeleteAssetConfirmation.value = true;
+    assetToDeleteId = id;
+};
 
-    if ( confirm( 'Do you really want to delete this asset?' ) ) {
-        try {
-            await request.deleteRequest( `/assets/delete/${ id }` );
-        } catch {
-            alert( 'Failed to delete asset' );
-        }
+/**
+ * Deletes the asset, no questions asked. This is ideally the callback used for the delete confirmation popup
+ */
+export const doDeleteAsset = async () => {
+    if ( assetToDeleteId < 0 ) return;
 
-        loadAssets();
+    isDeletingAsset.value = true;
+
+    try {
+        await request.deleteRequest( `/assets/delete/${ assetToDeleteId }` );
+        showDeleteAssetConfirmation.value = false;
+    } catch ( err ) {
+        if ( err === 'ERR_404' )
+            assetDeleteError.value = 'Asset not found';
+        else
+            assetDeleteError.value = 'Could not delete asset due to an unknown error';
+
+        console.error( err );
+    } finally {
+        isDeletingAsset.value = false;
     }
+
+    loadAssets();
 };
 
 export const openAssetManager = ( mode?: 'select' | 'default' ) => {

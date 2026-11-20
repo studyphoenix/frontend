@@ -1,12 +1,17 @@
 <script setup lang="ts">
     import {
+        assetDeleteError,
         assetManagerMode,
         assetsList,
         deleteAsset,
+        doDeleteAsset,
+        isDeletingAsset,
         selectedAssetId,
         showAddAsset,
-        showAssetManager
+        showAssetManager,
+        showDeleteAssetConfirmation
     } from '@/composables/asset-manager';
+    import ConfirmDeleteDialog from '../custom-ui-elements/ConfirmDeleteDialog.vue';
     import CreateAssetDialog from './CreateAssetDialog.vue';
     import PopupElement from '../custom-ui-elements/PopupElement.vue';
     import {
@@ -37,6 +42,14 @@
 
 <template>
     <CreateAssetDialog v-model="showAddAsset" />
+    <ConfirmDeleteDialog
+        v-model="showDeleteAssetConfirmation"
+        title="Delete asset"
+        message="Do you really want to delete this asset?"
+        :error="assetDeleteError"
+        :loading="isDeletingAsset"
+        @confirm="doDeleteAsset"
+    />
     <PopupElement v-model="showAssetManager" :show-close="true" :max-width="1500">
         <h1>Assets</h1>
         <div class="assets-list cursor-pointer">
