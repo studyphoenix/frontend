@@ -22,6 +22,15 @@ const router = createRouter( {
             }
         },
         {
+            'path': '/test',
+            'name': 'test',
+            'component': () => import( '@/pages/TestPage.vue' ),
+            'meta': {
+                'title': 'Test',
+                'auth': false
+            }
+        },
+        {
             'path': '/app',
             'name': 'app',
             'component': () => import( '@/pages/AppPage.vue' ),
