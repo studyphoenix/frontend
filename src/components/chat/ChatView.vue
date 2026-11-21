@@ -10,12 +10,12 @@
 
     let msgc = 2;
 
-    let canSend = reactive( true );
+    let canSend = ref( true );
     const compKey = ref( 0 );
     const userMessage = ref( '' );
 
     const send = () => {
-        if ( canSend ) {
+        if ( canSend.value ) {
             let msg: ModelChatMessage
                 = {
                     'chatId': 0, // need to actually pick the right value
