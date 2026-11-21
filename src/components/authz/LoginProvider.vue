@@ -4,9 +4,9 @@
         onMounted,
         ref
     } from 'vue';
-    import type {
-        ControllerUserProfileResponse
-    } from '@/ts/types/api';
+    import {
+        loadUserProfile
+    } from '@/ts/util/user';
     import router from '@/router';
     import {
         useAuthStore
@@ -21,8 +21,10 @@
         try {
             store.isAuth = await sdk.auth.check( force ? 'force=true' : undefined );
 
-            if ( store.isAuth )
-                isAuthorizedHandler();
+            if ( store.isAuth ) {
+                loadUserProfile();
+                router.push( '/app' );
+            }
         } catch ( e ) {
             if ( e instanceof sdk.request.AuthError ) {
                 throw e;
@@ -32,15 +34,6 @@
         }
 
         isLoggingIn.value = false;
-    };
-
-    const isAuthorizedHandler = async () => {
-        const profile: ControllerUserProfileResponse = await ( await sdk.request.get( '/user/profile' ) ).json();
-
-        store.username = profile.username;
-        store.email = profile.email;
-
-        router.push( '/app' );
     };
 
     const login = () => {
