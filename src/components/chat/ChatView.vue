@@ -8,7 +8,7 @@
     } from '@/ts/types/api';
 
     let msgc = 2;
-    let canSend = ref( true );
+    const canSend = ref( true );
 
     const compKey = ref( 0 );
     const userMessage = ref( '' );
