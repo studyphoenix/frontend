@@ -5,14 +5,14 @@
 
 
     const props = defineProps<{
-        'message': ModelChatMessage[];
+        'messages': ModelChatMessage[];
     }>();
 </script>
 
 <template>
     <div class="d-flex flex-column">
         <div
-            v-for="x in props.message"
+            v-for="x in props.messages"
             :key="x.id"
             class="d-flex flex-column"
             :value="[x.userMessage, x.modelMessage, x.updatedAt, x.summary]"

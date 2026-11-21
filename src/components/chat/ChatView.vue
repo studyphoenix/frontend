@@ -59,7 +59,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 
 <template>
     <v-container class="fill-height d-flex flex-column justify-center">
-        <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :message="msgs" />
+        <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" />
         <v-sheet class="d-flex ga-2 position-sticky pa-2 bottom-0 border rounded-lg">
             <v-text-field
                 v-model="userMessage"
