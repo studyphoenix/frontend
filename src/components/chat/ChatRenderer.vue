@@ -3,7 +3,7 @@
         ModelChatMessage
     } from '@/ts/types/api';
 
-
+    // a useless comment (which I had to commit so that the eslint checker would work)
     const props = defineProps<{
         'messages': ModelChatMessage[];
     }>();
