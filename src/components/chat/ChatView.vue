@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import {
-        ref,
-        reactive
+        reactive,
+        ref
     } from 'vue';
     import ChatRenderer from '@/components/chat/ChatRenderer.vue';
     import type {
@@ -9,8 +9,8 @@
     } from '@/ts/types/api';
 
     let msgc = 2;
-    const canSend = reactive(ref(true));
 
+    const canSend = reactive( ref( true ) );
     const compKey = ref( 0 );
     const userMessage = ref( '' );
 
@@ -63,38 +63,38 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
         <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" />
         <v-sheet class="d-flex ga-2 position-sticky pa-2 bottom-0 border rounded-lg">
             <v-text-field
+                v-if="canSend"
                 v-model="userMessage"
                 rows="1"
                 autofocus
                 label="Ask Anything"
                 @keypress.enter="send"
-                v-if="canSend"
             />
             <v-text-field
+                v-else
                 v-model="userMessage"
                 rows="1"
                 autofocus
                 label="Ask Anything"
+                disabled
                 @keypress.enter="send"
-                v-else
-                disabled
             />
             <v-btn
-                class="align-self-start"
-                icon="mdi-send"
-                width="56"
-                height="56"
-                @click="send"
                 v-if="canSend"
-            />
-            <v-btn
                 class="align-self-start"
                 icon="mdi-send"
                 width="56"
                 height="56"
                 @click="send"
+            />
+            <v-btn
                 v-else
+                class="align-self-start"
+                icon="mdi-send"
+                width="56"
+                height="56"
                 disabled
+                @click="send"
             />
         </v-sheet>
     </v-container>
