@@ -63,37 +63,19 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
         <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" />
         <v-sheet class="d-flex ga-2 position-sticky pa-2 bottom-0 border rounded-lg">
             <v-text-field
-                v-if="canSend"
+                :disabled="canSend"
                 v-model="userMessage"
                 rows="1"
                 autofocus
                 label="Ask Anything"
                 @keypress.enter="send"
             />
-            <v-text-field
-                v-else
-                v-model="userMessage"
-                rows="1"
-                autofocus
-                label="Ask Anything"
-                disabled
-                @keypress.enter="send"
-            />
             <v-btn
-                v-if="canSend"
+                disabled="canSend"
                 class="align-self-start"
                 icon="mdi-send"
                 width="56"
                 height="56"
-                @click="send"
-            />
-            <v-btn
-                v-else
-                class="align-self-start"
-                icon="mdi-send"
-                width="56"
-                height="56"
-                disabled
                 @click="send"
             />
         </v-sheet>
