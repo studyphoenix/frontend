@@ -55,6 +55,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
                 'updatedAt': ''
             }
         ];
+    /*
     const loadMsgs = ( chatId: number ) => {
         try {
             msgs.value = await ( await request.get( `/chats/get/${ chatId }` ) ).json();
@@ -63,6 +64,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
             alert( 'Failed to load messages' ); // This needs to use some more elaborate component that probably exists already
         }
     }
+    */
 
 </script>
 
