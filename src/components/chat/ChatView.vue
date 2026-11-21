@@ -1,6 +1,5 @@
 <script setup lang="ts">
     import {
-        reactive,
         ref
     } from 'vue';
     import ChatRenderer from '@/components/chat/ChatRenderer.vue';
