@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import {
-        ref
+        ref,
+        reactive
     } from 'vue';
     import ChatRenderer from '@/components/chat/ChatRenderer.vue';
     import type {
@@ -8,13 +9,13 @@
     } from '@/ts/types/api';
 
     let msgc = 2;
-    let canSend = true;
+    const canSend = reactive(ref(true));
 
     const compKey = ref( 0 );
     const userMessage = ref( '' );
 
     const send = () => {
-        if ( canSend ) {
+        if ( canSend.value ) {
             let msg: ModelChatMessage
                 = {
                     'chatId': 0, // need to actually pick the right value
@@ -67,6 +68,16 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
                 autofocus
                 label="Ask Anything"
                 @keypress.enter="send"
+                v-if="canSend"
+            />
+            <v-text-field
+                v-model="userMessage"
+                rows="1"
+                autofocus
+                label="Ask Anything"
+                @keypress.enter="send"
+                v-else
+                disabled
             />
             <v-btn
                 class="align-self-start"
@@ -74,6 +85,16 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
                 width="56"
                 height="56"
                 @click="send"
+                v-if="canSend"
+            />
+            <v-btn
+                class="align-self-start"
+                icon="mdi-send"
+                width="56"
+                height="56"
+                @click="send"
+                v-else
+                disabled
             />
         </v-sheet>
     </v-container>
