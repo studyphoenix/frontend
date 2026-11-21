@@ -102,7 +102,7 @@ export interface ModelCreateAssetRequest {
     'mediaType': string;
     /**
    * @minLength 3
-   * @maxLength 250
+   * @maxLength 100
    * @example "Analysis Script"
    */
     'name': string;
@@ -167,6 +167,19 @@ export interface ModelCreateSubtopicRequest {
    * @example "Analysis"
    */
     'name': string;
+    /**
+   * Due to limitation of validator, has to be value + 1
+   * @min 0
+   * @max 100
+   * @default 1
+   * @example 1
+   */
+    'progress': number;
+    /**
+   * Subject this subtopic belongs to
+   * @example 1
+   */
+    'subject': number;
 }
 
 export interface ModelFlashcard {
@@ -199,12 +212,19 @@ export interface ModelSubject {
 export interface ModelSubtopic {
     'assets'?: ModelAsset[];
     'chats'?: ModelChat[];
+    'children'?: ModelSubtopic[];
     /** @example "fa-gear" */
     'icon': string;
     'id': number;
     /** @example "ordinary differential equations" */
     'name': string;
-    'subtopics'?: ModelSubtopic[];
+    /**
+   * value in [0, 100]
+   * @min 0
+   * @max 100
+   * @example 0
+   */
+    'progress': number;
     /** @example "2026-12-17T13:47:33Z" */
     'updatedAt': string;
 }
@@ -274,7 +294,7 @@ export interface ModelUpdateFlashcardRequest {
 export interface ModelUpdateSubjectRequest {
     /**
    * The Icon of the subject. Must be an icon that can be rendered in the browser
-   * @minLength 0
+   * @minLength 1
    * @maxLength 100
    * @example "fa-gear"
    */
@@ -301,6 +321,18 @@ export interface ModelUpdateSubtopicRequest {
    * @example "Analysis"
    */
     'name'?: string;
+    /**
+   * @min 0
+   * @max 100
+   * @default 0
+   * @example 0
+   */
+    'progress'?: number;
+    /**
+   * Subject this subtopic belongs to
+   * @example 1
+   */
+    'subject'?: number;
 }
 
 export interface ModelUpdateUserConfigRequest {

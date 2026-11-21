@@ -37,21 +37,28 @@
                 title="Home"
                 value="home"
                 link
-                href="/"
+                to="/"
             />
             <v-list-item
                 prepend-icon="mdi-chat"
                 title="Chats"
                 value="chats"
                 link
-                href="/chat"
+                to="/chat"
             />
             <v-list-item
                 prepend-icon="mdi-school"
                 title="Subjects"
                 value="subjects"
                 link
-                :to="{ 'name': 'subject-picker' }"
+                to="/subjects"
+            />
+            <v-list-item
+                prepend-icon="mdi-sitemap"
+                title="Tech Tree"
+                value="techtree"
+                link
+                to="/techtree"
             />
         </v-list>
         <template #append>

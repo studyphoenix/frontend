@@ -38,4 +38,4 @@ jobs:
       - name: Push changes back to repository
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "ci: your code was formatted by Eslint :noproblem: [skip ci]"
+          commit_message: "ci: your code was formatted by Eslint :noproblem:"

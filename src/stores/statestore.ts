@@ -2,11 +2,9 @@ import type {
     ControllerCreatedResponse,
     ModelSubject
 } from '@/ts/types/api';
-
-// import {
-//     createSampleSubjects
-// } from '@/composables/techtree-sample';
-
+import {
+    createSampleSubjects
+} from '@/composables/techtree-sample';
 import {
     defineStore
 } from 'pinia';
@@ -40,7 +38,7 @@ export const useStateStore = defineStore( 'statestore', () => {
     const fetchSubjects = async () => {
         if ( isBackendless ) {
             if ( subjects.value.length === 0 ) {
-                // subjects.value = createSampleSubjects();
+                subjects.value = createSampleSubjects();
             }
 
             return;

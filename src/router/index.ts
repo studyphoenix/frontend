@@ -28,6 +28,24 @@ const router = createRouter( {
             }
         },
         {
+            'path': '/techtree',
+            'name': 'techtree',
+            'component': () => import( '@/pages/TechTreePage.vue' ),
+            'meta': {
+                'title': 'Tech Tree',
+                'auth': true
+            }
+        },
+        {
+            'path': '/chat/:id?',
+            'name': 'chat',
+            'component': () => import( '@/pages/ChatPage.vue' ),
+            'meta': {
+                'title': 'Chat',
+                'auth': true
+            }
+        },
+        {
             'path': '/subjects',
             'name': 'subject-picker',
             'component': () => import( '@/components/subjects/SubjectPicker.vue' ),
@@ -48,13 +66,21 @@ const router = createRouter( {
     ]
 } );
 
-router.beforeEach( to => {
+router.beforeEach( async to => {
     const store = useAuthStore();
 
     if ( to.meta.auth && !store.isAuth ) {
-        return {
-            'name': 'home'
-        };
+        try {
+            store.isAuth = await auth.check();
+        } catch {
+            store.isAuth = false;
+        }
+
+        if ( !store.isAuth ) {
+            return {
+                'name': 'home'
+            };
+        }
     } else if ( to.name === 'home' && store.isAuth ) {
         return {
             'name': 'app'
