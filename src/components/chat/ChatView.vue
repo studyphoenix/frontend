@@ -71,7 +71,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
                 @keypress.enter="send"
             />
             <v-btn
-                disabled="canSend"
+                :disabled="canSend"
                 class="align-self-start"
                 icon="mdi-send"
                 width="56"
