@@ -3,6 +3,12 @@ import {
     createWebHistory
 } from 'vue-router';
 import {
+    auth
+} from '@janishutz/oidc-login-sdk-browser';
+import {
+    loadUserProfile
+} from '@/ts/util/user';
+import {
     useAuthStore
 } from '@/stores/authstore';
 
@@ -15,6 +21,15 @@ const router = createRouter( {
             'component': () => import( '@/pages/StartPage.vue' ),
             'meta': {
                 'title': 'Home',
+                'auth': false
+            }
+        },
+        {
+            'path': '/test',
+            'name': 'test',
+            'component': () => import( '@/pages/TestPage.vue' ),
+            'meta': {
+                'title': 'Test',
                 'auth': false
             }
         },
@@ -80,6 +95,8 @@ router.beforeEach( async to => {
             return {
                 'name': 'home'
             };
+        } else {
+            loadUserProfile();
         }
     } else if ( to.name === 'home' && store.isAuth ) {
         return {
