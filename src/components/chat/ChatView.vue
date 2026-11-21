@@ -63,8 +63,8 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
         <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" />
         <v-sheet class="d-flex ga-2 position-sticky pa-2 bottom-0 border rounded-lg">
             <v-text-field
-                :disabled="canSend"
                 v-model="userMessage"
+                :disabled="canSend"
                 rows="1"
                 autofocus
                 label="Ask Anything"
