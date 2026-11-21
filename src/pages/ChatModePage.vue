@@ -5,7 +5,7 @@
 
 <template>
     <v-container class="fill-height d-flex flex-column justify-center">
-        <SideBar/>
-        <ChatView/>
+        <SideBar />
+        <ChatView />
     </v-container>
 </template>
