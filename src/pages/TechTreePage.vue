@@ -10,7 +10,7 @@
         watch
     } from 'vue';
     import CreateSubjectDialog from '@/components/techtree/CreateSubjectDialog.vue';
-    import CreateSubtopicDialog from '@/components/techtree/CreateSubtopicDialog.vue';
+    import GenerateTechTreeDialog from '@/components/techtree/GenerateTechTreeDialog.vue';
     import type {
         ModelSubtopic
     } from '@/ts/types/api';
@@ -36,14 +36,17 @@
         loading,
         error,
         fetchTechTree,
-        createSubtopic
+        bulkCreateTechTree
     } = useTechTree();
     const graph = computed( () => buildTechTreeGraph( subtopics.value ) );
     const flowInstance = ref<VueFlowStore | null>( null );
     const selectedSubtopic = ref<ModelSubtopic | null>( null );
     const popupOpen = ref( false );
     const createSubjectDialogOpen = ref( false );
-    const createSubtopicDialogOpen = ref( false );
+    const generateDialogOpen = ref( false );
+    const selectedSubjectItem = computed( () => {
+        return stateStore.subjects.find( s => s.id === stateStore.selectedSubject ) ?? null;
+    } );
 
     const handleFlowInit = ( instance: VueFlowStore ) => {
         flowInstance.value = instance;
@@ -80,11 +83,6 @@
 
     const openCreateSubjectDialog = () => {
         createSubjectDialogOpen.value = true;
-    };
-
-    const openCreateSubtopicDialog = () => {
-        error.value = null;
-        createSubtopicDialogOpen.value = true;
     };
 
     watch( () => stateStore.selectedSubject, subjectId => {
@@ -174,12 +172,12 @@
             >
                 <span>No subtopics found for this subject yet.</span>
                 <v-btn
-                    color="on-surface"
-                    prepend-icon="mdi-plus"
-                    variant="outlined"
-                    @click="openCreateSubtopicDialog"
+                    color="primary"
+                    prepend-icon="mdi-auto-fix"
+                    variant="tonal"
+                    @click="generateDialogOpen = true"
                 >
-                    Create Subtopic
+                    Generate with AI
                 </v-btn>
             </div>
 
@@ -243,11 +241,11 @@
 
         <CreateSubjectDialog v-model="createSubjectDialogOpen" />
 
-        <CreateSubtopicDialog
-            v-model="createSubtopicDialogOpen"
-            :create-subtopic="createSubtopic"
+        <GenerateTechTreeDialog
+            v-model="generateDialogOpen"
+            :bulk-create-tech-tree="bulkCreateTechTree"
             :external-error="error"
-            :subject-id="stateStore.selectedSubject"
+            :subject="selectedSubjectItem"
         />
     </v-container>
 </template>

@@ -5,6 +5,10 @@ import type {
     ModelSubtopic
 } from '@/ts/types/api';
 import {
+    type GeneratedTechTree,
+    toBulkCreatePayload
+} from '@/ts/util/techtree-validator';
+import {
     createSampleSubtopics
 } from './techtree-sample';
 import {
@@ -365,6 +369,62 @@ export const useTechTree = () => {
         await deleteAndRefresh( subtopicId, `/assets/delete/${ assetId }`, 'asset' );
     };
 
+    const bulkCreateTechTree = async ( subjectId: number, tree: GeneratedTechTree ): Promise<boolean> => {
+        error.value = null;
+
+        if ( isBackendless ) {
+            const baseId = Date.now();
+            const nodeMap = new Map<number, ModelSubtopic>();
+
+            for ( const [
+                idx,
+                item
+            ] of tree.subtopics.entries() ) {
+                nodeMap.set( item.id, {
+                    'id': baseId + idx,
+                    'name': item.name,
+                    'icon': 'mdi-sitemap',
+                    'progress': 0,
+                    'updatedAt': new Date().toISOString(),
+                    'children': []
+                } );
+            }
+
+            for ( const edge of tree.edges ) {
+                const fromNode = nodeMap.get( edge.from );
+                const toNode = nodeMap.get( edge.to );
+
+                if ( fromNode && toNode ) {
+                    fromNode.children = [
+                        ...fromNode.children ?? [],
+                        toNode
+                    ];
+                }
+            }
+
+            subtopics.value = Array.from( nodeMap.values() );
+
+            return true;
+        }
+
+        try {
+            const payload = toBulkCreatePayload( subjectId, tree );
+            const res = await request.put( '/subjects/techtree/create', JSON.stringify( payload ) );
+
+            if ( !res.ok ) {
+                throw new Error( `Failed to save tech tree (${ res.status })` );
+            }
+
+            await fetchTechTree( subjectId );
+
+            return true;
+        } catch ( err ) {
+            error.value = err instanceof Error ? err.message : 'Failed to save generated tech tree';
+
+            return false;
+        }
+    };
+
     return {
         subtopics,
         activeSubtopic,
@@ -374,6 +434,7 @@ export const useTechTree = () => {
         subtopicError,
         fetchTechTree,
         createSubtopic,
+        bulkCreateTechTree,
         fetchSubtopicDetails,
         createAndAttachChat,
         deleteChat,
