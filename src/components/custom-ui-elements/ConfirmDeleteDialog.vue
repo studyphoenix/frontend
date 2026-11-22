@@ -2,12 +2,19 @@
     const isOpen = defineModel<boolean>( {
         'default': false
     } );
-    const props = defineProps<{
+    const props = withDefaults( defineProps<{
         'title': string;
         'message': string;
+        'confirmLabel'?: string;
+        'confirmColor'?: string;
         'loading'?: boolean;
         'error'?: string | null;
-    }>();
+    }>(), {
+        'confirmLabel': 'Delete',
+        'confirmColor': 'error',
+        'loading': false,
+        'error': null
+    } );
     const emit = defineEmits<{
         'confirm': [];
         'clear-error': [];
@@ -60,12 +67,12 @@
                 </v-btn>
 
                 <v-btn
-                    color="error"
+                    :color="props.confirmColor"
                     :loading="props.loading"
                     variant="tonal"
                     @click="emit( 'confirm' )"
                 >
-                    Delete
+                    {{ props.confirmLabel }}
                 </v-btn>
             </div>
         </v-sheet>

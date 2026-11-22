@@ -1,0 +1,28 @@
+.create-subject-dialog {
+    &__sheet {
+        padding: 1.25rem;
+    }
+
+    &__title {
+        margin-bottom: 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    &__help {
+        margin: 0 0 1rem;
+        color: rgb(var(--v-theme-medium-emphasis));
+        font-size: 0.875rem;
+    }
+
+    &__alert {
+        margin-bottom: 1rem;
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+}

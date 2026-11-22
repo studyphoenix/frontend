@@ -1,12 +1,14 @@
 import type {
     ControllerCreatedResponse,
-    ModelAsset,
     ModelChat,
     ModelSubtopic
 } from '@/ts/types/api';
 import type {
     GeneratedTechTree
 } from '@/ts/types/techtree-generation';
+import {
+    assetsList
+} from './asset-manager';
 import {
     createSampleSubtopics
 } from './techtree-sample';
@@ -19,40 +21,6 @@ import {
 import {
     toBulkCreatePayload
 } from '@/ts/util/techtree-validator';
-
-interface AssetMeta {
-    'mediaType': string;
-    'icon': string;
-    'uploadExt': string;
-}
-
-const SUPPORTED_ASSET_TYPES: Record<string, AssetMeta> = {
-    'pdf': {
-        'mediaType': 'application/pdf',
-        'icon': 'mdi-file-pdf-box',
-        'uploadExt': '.pdf'
-    },
-    'png': {
-        'mediaType': 'image/png',
-        'icon': 'mdi-file-image',
-        'uploadExt': '.png'
-    },
-    'jpg': {
-        'mediaType': 'image/jpg',
-        'icon': 'mdi-file-image',
-        'uploadExt': '.jpg'
-    },
-    'jpeg': {
-        'mediaType': 'image/jpeg',
-        'icon': 'mdi-file-image',
-        'uploadExt': '.jpg'
-    },
-    'json': {
-        'mediaType': 'application/json',
-        'icon': 'mdi-code-json',
-        'uploadExt': '.json'
-    }
-};
 
 const toAsciiName = ( raw: string, fallback: string ): string => {
     const cleaned = raw.replace( /[^\x20-\x7E]/g, '' ).trim();
@@ -156,7 +124,10 @@ export const useTechTree = () => {
         subtopicError.value = null;
 
         if ( isBackendless ) {
-            const found = fallbackSubtopic ?? subtopics.value.find( st => st.id === subtopicId ) ?? null;
+            const found = ( activeSubtopic.value?.id === subtopicId ? activeSubtopic.value : null )
+                ?? subtopics.value.find( st => st.id === subtopicId )
+                ?? fallbackSubtopic
+                ?? null;
 
             activeSubtopic.value = found
                 ? {
@@ -249,22 +220,6 @@ export const useTechTree = () => {
         }
     };
 
-    const deleteAndRefresh = async ( subtopicId: number, endpoint: string, label: string ) => {
-        subtopicError.value = null;
-
-        try {
-            const res = await request.deleteRequest( endpoint );
-
-            if ( !res.ok ) {
-                throw new Error( `Failed to delete ${ label } (${ res.status })` );
-            }
-
-            await fetchSubtopicDetails( subtopicId );
-        } catch ( err ) {
-            subtopicError.value = err instanceof Error ? err.message : `Failed to delete ${ label }`;
-        }
-    };
-
     const deleteChat = async ( subtopicId: number, chatId: number ) => {
         if ( isBackendless ) {
             if ( activeSubtopic.value && activeSubtopic.value.id === subtopicId ) {
@@ -274,101 +229,83 @@ export const useTechTree = () => {
             return;
         }
 
-        await deleteAndRefresh( subtopicId, `/chats/delete/${ chatId }`, 'chat' );
-    };
-
-    const uploadAndAttachAsset = async ( subtopicId: number, file: File ): Promise<ModelAsset | null> => {
-        const ext = file.name.split( '.' ).pop()
-            ?.toLowerCase() ?? '';
-        const meta = SUPPORTED_ASSET_TYPES[ext];
-
-        if ( !meta ) {
-            subtopicError.value = `Unsupported file type ".${ ext }". Supported: PDF, PNG, JPG, JSON`;
-
-            return null;
-        }
-
-        const cleanName = toAsciiName( file.name.replace( /\.[^/.]+$/, '' ), 'Uploaded Asset' );
-
-        if ( isBackendless ) {
-            const mockAsset: ModelAsset = {
-                'id': Date.now(),
-                'name': cleanName,
-                'mediaType': meta.mediaType,
-                'icon': meta.icon,
-                'updatedAt': new Date().toISOString()
-            };
-
-            if ( activeSubtopic.value && activeSubtopic.value.id === subtopicId ) {
-                activeSubtopic.value.assets = [
-                    ...activeSubtopic.value.assets ?? [],
-                    mockAsset
-                ];
-            }
-
-            return mockAsset;
-        }
-
         subtopicError.value = null;
 
         try {
-            const createRes = await request.put(
-                '/assets/create',
-                JSON.stringify( {
-                    'name': cleanName,
-                    'mediaType': meta.mediaType,
-                    'icon': meta.icon
-                } )
-            );
+            const res = await request.deleteRequest( `/chats/delete/${ chatId }` );
 
-            if ( !createRes.ok ) {
-                throw new Error( `Failed to create asset (${ createRes.status })` );
+            if ( !res.ok ) {
+                throw new Error( `Failed to delete chat (${ res.status })` );
             }
 
-            const created = await createRes.json() as ControllerCreatedResponse;
-            const formData = new FormData();
+            await fetchSubtopicDetails( subtopicId );
+        } catch ( err ) {
+            subtopicError.value = err instanceof Error ? err.message : 'Failed to delete chat';
+        }
+    };
 
-            formData.append( 'file', file, `${ created.id }${ meta.uploadExt }` );
-            const uploadUrl = new URL( `/assets/upload/${ created.id }`, request.getBackendURL() );
-            const uploadRes = await fetch( uploadUrl, {
-                'method': 'PUT',
-                'credentials': 'include',
-                'body': formData
-            } );
+    const updateSubtopicAssetAssociation = async (
+        subtopicId: number,
+        assetId: number,
+        action: 'associate' | 'deassociate'
+    ): Promise<boolean> => {
+        subtopicError.value = null;
 
-            if ( !uploadRes.ok ) {
-                throw new Error( `Failed to upload file (${ uploadRes.status })` );
+        if ( isBackendless ) {
+            if ( activeSubtopic.value && activeSubtopic.value.id === subtopicId ) {
+                const current = activeSubtopic.value.assets ?? [];
+
+                if ( action === 'associate' ) {
+                    const found = assetsList.value.find( a => a.id === assetId );
+
+                    if ( found && !current.some( a => a.id === assetId ) ) {
+                        activeSubtopic.value.assets = [
+                            ...current,
+                            found
+                        ];
+                    }
+                } else {
+                    activeSubtopic.value.assets = current.filter( a => a.id !== assetId );
+                }
             }
 
-            const assocRes = await request.patch(
-                `/subtopics/associate/assets/${ subtopicId }`,
-                JSON.stringify( [ created.id ] )
+            return true;
+        }
+
+        try {
+            const res = await request.patch(
+                `/subtopics/${ action }/assets/${ subtopicId }`,
+                JSON.stringify( [ assetId ] )
             );
 
-            if ( !assocRes.ok ) {
-                throw new Error( `Failed to attach asset (${ assocRes.status })` );
+            if ( !res.ok ) {
+                throw new Error( `Failed to ${ action } asset (${ res.status })` );
             }
 
             await fetchSubtopicDetails( subtopicId );
 
-            return activeSubtopic.value?.assets?.find( a => a.id === created.id ) ?? null;
+            return true;
         } catch ( err ) {
-            subtopicError.value = err instanceof Error ? err.message : 'Failed to upload asset';
+            subtopicError.value = err instanceof Error
+                ? err.message
+                : `Failed to ${ action === 'associate' ? 'attach' : 'remove' } asset`;
 
-            return null;
+            return false;
         }
     };
 
-    const deleteAsset = async ( subtopicId: number, assetId: number ) => {
-        if ( isBackendless ) {
-            if ( activeSubtopic.value && activeSubtopic.value.id === subtopicId ) {
-                activeSubtopic.value.assets = ( activeSubtopic.value.assets ?? [] ).filter( a => a.id !== assetId );
-            }
+    const associateAssetToSubtopic = ( subtopicId: number, assetId: number ): Promise<boolean> => {
+        return updateSubtopicAssetAssociation( subtopicId, assetId, 'associate' );
+    };
 
-            return;
+    const deassociateAssetFromSubtopic = ( subtopicId: number, assetId: number ): Promise<boolean> => {
+        return updateSubtopicAssetAssociation( subtopicId, assetId, 'deassociate' );
+    };
+
+    const removeAssetLocally = ( assetId: number ) => {
+        if ( activeSubtopic.value?.assets ) {
+            activeSubtopic.value.assets = activeSubtopic.value.assets.filter( a => a.id !== assetId );
         }
-
-        await deleteAndRefresh( subtopicId, `/assets/delete/${ assetId }`, 'asset' );
     };
 
     const bulkCreateTechTree = async ( subjectId: number, tree: GeneratedTechTree ): Promise<boolean> => {
@@ -440,7 +377,8 @@ export const useTechTree = () => {
         fetchSubtopicDetails,
         createAndAttachChat,
         deleteChat,
-        uploadAndAttachAsset,
-        deleteAsset
+        associateAssetToSubtopic,
+        deassociateAssetFromSubtopic,
+        removeAssetLocally
     };
 };
