@@ -228,7 +228,7 @@
                         target="_blank"
                         variant="tonal"
                     >
-                        Download {{ selectedAsset.mediaType }}
+                        Download file
                     </v-btn>
                 </div>
             </v-sheet>

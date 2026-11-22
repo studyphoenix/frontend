@@ -1,35 +1,23 @@
+import type {
+    LlmMessage,
+    ParsedProfessorTurn,
+    ProfessorLlmClient,
+    ProfessorPromptContext,
+    ProfessorTurnResult
+} from '@/ts/types/professor-mode';
 import {
-    type ParsedProfessorTurn,
-    type ProfessorPromptContext,
     buildProfessorSystemPrompt,
     parseProfessorResponse
 } from '@/ts/prompts/professor-mode';
+import {
+    callLlm,
+    isLlmMockEnabled
+} from '@/ts/ai/llm-client';
 import type {
     ModelChatMessage
 } from '@/ts/types/api';
 
-export interface ProfessorTurnResult extends ParsedProfessorTurn {
-    'usedMock': boolean;
-}
-
-export type ProfessorLlmClient = (
-    systemPrompt: string,
-    messages: Array<{
-        'role': 'user' | 'assistant';
-        'content': string;
-    }>
-) => Promise<string>;
-
-export const isProfessorMockEnabled = (): boolean => {
-    if ( import.meta.env.VITE_MOCK_AI === 'true' || import.meta.env.VITE_BACKENDLESS === 'true' ) {
-        return true;
-    }
-
-    const hasProxyUrl = Boolean( import.meta.env.VITE_AI_API_URL );
-    const hasAnthropicKey = Boolean( import.meta.env.VITE_ANTHROPIC_API_KEY );
-
-    return !hasProxyUrl && !hasAnthropicKey;
-};
+export const isProfessorMockEnabled = (): boolean => isLlmMockEnabled();
 
 const formatMockReply = (
     paragraphs: string[],
@@ -249,91 +237,6 @@ const createMockProfessorTurn = (
     };
 };
 
-const extractLlmText = ( data: unknown ): string => {
-    if ( !data || typeof data !== 'object' ) {
-        throw new Error( 'Empty response from AI service.' );
-    }
-
-    const record = data as Record<string, unknown>;
-
-    if ( typeof record.text === 'string' ) {
-        return record.text;
-    }
-
-    if ( Array.isArray( record.content ) ) {
-        const textBlock = record.content.find(
-            block => block && typeof block === 'object' && ( block as Record<string, unknown> ).type === 'text'
-        ) as Record<string, unknown> | undefined;
-
-        if ( textBlock && typeof textBlock.text === 'string' ) {
-            return textBlock.text;
-        }
-    }
-
-    if ( Array.isArray( record.choices ) && record.choices[0] && typeof record.choices[0] === 'object' ) {
-        const message = ( record.choices[0] as Record<string, unknown> ).message;
-
-        if ( message && typeof message === 'object' && typeof ( message as Record<string, unknown> ).content === 'string' ) {
-            return ( message as Record<string, unknown> ).content as string;
-        }
-    }
-
-    throw new Error( 'AI response did not contain generated text.' );
-};
-
-const callConfiguredProfessorLlm: ProfessorLlmClient = async ( systemPrompt, messages ) => {
-    const proxyUrl = import.meta.env.VITE_AI_API_URL as string | undefined;
-
-    if ( proxyUrl ) {
-        const res = await fetch( proxyUrl, {
-            'method': 'POST',
-            'credentials': 'include',
-            'headers': {
-                'Content-Type': 'application/json'
-            },
-            'body': JSON.stringify( {
-                'system': systemPrompt,
-                messages
-            } )
-        } );
-
-        if ( !res.ok ) {
-            throw new Error( `AI proxy request failed (${ res.status }).` );
-        }
-
-        return extractLlmText( await res.json() );
-    }
-
-    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY as string | undefined;
-
-    if ( !apiKey ) {
-        throw new Error( 'No AI endpoint or API key configured.' );
-    }
-
-    const model = ( import.meta.env.VITE_ANTHROPIC_MODEL as string | undefined ) || 'claude-sonnet-4-5-20250929';
-    const res = await fetch( 'https://api.anthropic.com/v1/messages', {
-        'method': 'POST',
-        'headers': {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        'body': JSON.stringify( {
-            model,
-            'max_tokens': 1024,
-            'system': systemPrompt,
-            messages
-        } )
-    } );
-
-    if ( !res.ok ) {
-        throw new Error( `Anthropic API request failed (${ res.status }).` );
-    }
-
-    return extractLlmText( await res.json() );
-};
-
 export const requestProfessorReply = async (
     ctx: ProfessorPromptContext,
     history: ModelChatMessage[],
@@ -350,10 +253,7 @@ export const requestProfessorReply = async (
     }
 
     const systemPrompt = buildProfessorSystemPrompt( ctx );
-    const messages: Array<{
-        'role': 'user' | 'assistant';
-        'content': string;
-    }> = [];
+    const messages: LlmMessage[] = [];
 
     for ( const turn of history ) {
         if ( turn.userMessage.trim() ) {
@@ -376,8 +276,9 @@ export const requestProfessorReply = async (
         'content': userMessage
     } );
 
-    const client = customClient ?? callConfiguredProfessorLlm;
-    const raw = await client( systemPrompt, messages );
+    const raw = customClient
+        ? await customClient( systemPrompt, messages )
+        : await callLlm( systemPrompt, messages );
 
     return {
         ...parseProfessorResponse( raw ),

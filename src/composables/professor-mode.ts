@@ -3,7 +3,6 @@ import type {
     ModelAsset,
     ModelChat,
     ModelChatMessage,
-    ModelSettings,
     ModelSubject,
     ModelSubtopic
 } from '@/ts/types/api';
@@ -13,27 +12,30 @@ import {
 } from '@/ts/ai/professor-chat';
 import type {
     ProfessorPromptContext
-} from '@/ts/prompts/professor-mode';
+} from '@/ts/types/professor-mode';
 import {
     ref
 } from 'vue';
 import {
     request
 } from '@janishutz/oidc-login-sdk-browser';
+import {
+    storeToRefs
+} from 'pinia';
+import {
+    useSettingsStore
+} from '@/stores/settingsstore';
 
-const DEFAULT_SETTINGS: ModelSettings = {
-    'answerLength': 'default',
-    'answerInBulletPoints': false
-};
 const CHECKPOINT_PROGRESS_STEP = 25;
 
 export const useProfessorMode = () => {
     const isBackendless = import.meta.env.VITE_BACKENDLESS === 'true';
+    const settingsStore = useSettingsStore();
+    const {
+        settings
+    } = storeToRefs( settingsStore );
     const subtopic = ref<ModelSubtopic | null>( null );
     const assets = ref<ModelAsset[]>( [] );
-    const settings = ref<ModelSettings>( {
-        ...DEFAULT_SETTINGS
-    } );
     const messages = ref<ModelChatMessage[]>( [] );
     const openingMessage = ref( '' );
     const checkpointActive = ref( false );
@@ -49,33 +51,6 @@ export const useProfessorMode = () => {
         'currentProgress': Number( subtopic.value?.progress ?? 0 ),
         'checkpointActive': checkpointActive.value
     } );
-
-    const loadUserSettings = async () => {
-        if ( isBackendless ) {
-            settings.value = {
-                ...DEFAULT_SETTINGS
-            };
-
-            return;
-        }
-
-        try {
-            const res = await request.get( '/user/config' );
-
-            if ( res.ok ) {
-                const data = await res.json() as Partial<ModelSettings>;
-
-                settings.value = {
-                    'answerLength': data.answerLength ?? 'default',
-                    'answerInBulletPoints': Boolean( data.answerInBulletPoints )
-                };
-            }
-        } catch {
-            settings.value = {
-                ...DEFAULT_SETTINGS
-            };
-        }
-    };
 
     const loadTopicContext = async ( subtopicId: number | null, subjectId: number | null ) => {
         if ( isBackendless ) {
@@ -101,21 +76,23 @@ export const useProfessorMode = () => {
         const seenIds = new Set<number>();
 
         if ( subjectId && subjectId > 0 ) {
+            let subjectData: ModelSubject | null = null;
+
             try {
                 const subjectRes = await request.get( `/subjects/get/${ subjectId }` );
 
                 if ( subjectRes.ok ) {
-                    const subjectData = await subjectRes.json() as ModelSubject;
-
-                    for ( const asset of subjectData.assets ?? [] ) {
-                        if ( !seenIds.has( asset.id ) ) {
-                            seenIds.add( asset.id );
-                            collected.push( asset );
-                        }
-                    }
+                    subjectData = await subjectRes.json() as ModelSubject;
                 }
             } catch {
-                // Optional subject materials
+                subjectData = null;
+            }
+
+            for ( const asset of subjectData?.assets ?? [] ) {
+                if ( !seenIds.has( asset.id ) ) {
+                    seenIds.add( asset.id );
+                    collected.push( asset );
+                }
             }
         }
 
@@ -159,7 +136,7 @@ export const useProfessorMode = () => {
 
         try {
             await Promise.all( [
-                loadUserSettings(),
+                settingsStore.loadSettings(),
                 loadTopicContext( subtopicId, subjectId )
             ] );
             openingMessage.value = createProfessorOpeningMessage( buildContext( chatName ) );
@@ -210,17 +187,14 @@ export const useProfessorMode = () => {
                 persistedId = created.id;
             }
 
-            messages.value = [
-                ...messages.value,
-                {
-                    'id': persistedId,
-                    'chatId': chatId ?? 0,
-                    'userMessage': trimmed,
-                    'modelMessage': result.reply,
-                    'summary': result.summary,
-                    'updatedAt': new Date().toISOString()
-                }
-            ];
+            messages.value.push( {
+                'id': persistedId,
+                'chatId': chatId ?? 0,
+                'userMessage': trimmed,
+                'modelMessage': result.reply,
+                'summary': result.summary,
+                'updatedAt': new Date().toISOString()
+            } );
 
             if ( result.checkpointPassed ) {
                 checkpointActive.value = false;
