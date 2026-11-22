@@ -196,7 +196,7 @@
                 Create Asset
             </h3>
             <p class="text-body-2 text-medium-emphasis mb-4">
-                Create an asset and upload a file (PDF, PNG, JPG or JSON).
+                Create an asset and upload a file (PDF, PNG, JPG or any text file).
             </p>
 
             <v-alert

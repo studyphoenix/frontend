@@ -41,13 +41,11 @@
             return;
         }
 
-        const chosenId = selectedAssetId.value;
-
         showAssetManager.value = false;
-        selectedAssetId.value = -1;
         document.dispatchEvent( new CustomEvent( 'studyphoenix:assets:select', {
-            'detail': chosenId
+            'detail': selectedAssetId.value
         } ) );
+        selectedAssetId.value = -1;
     };
 
     const handleDoubleClick = ( assetId: number ) => {
