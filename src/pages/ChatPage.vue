@@ -8,6 +8,7 @@
     import type {
         ModelChat
     } from '@/ts/types/api';
+    import ProfessorModeView from '@/components/chat/ProfessorModeView.vue';
     import SideBar from '@/components/SideBar.vue';
     import {
         getChatModeMeta
@@ -77,7 +78,11 @@
 </script>
 
 <template>
-    <v-container class="fill-height d-flex flex-column align-center justify-center pa-6 text-center">
+    <v-container
+        class="fill-height d-flex flex-column pa-6"
+        :class="modeMeta.mode === 1 ? 'align-stretch professor-container' : 'align-center justify-center text-center'"
+        fluid
+    >
         <SideBar />
 
         <div
@@ -86,6 +91,13 @@
         >
             <v-progress-circular indeterminate />
         </div>
+
+        <ProfessorModeView
+            v-else-if="modeMeta.mode === 1"
+            :chat="chat"
+            :chat-id="chatId"
+            :chat-name="displayName"
+        />
 
         <v-sheet
             v-else
@@ -125,6 +137,11 @@
 </template>
 
 <style scoped lang="scss">
+    .professor-container {
+        height: 100dvh;
+        flex-wrap: nowrap;
+    }
+
     .wip-card {
         border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     }
