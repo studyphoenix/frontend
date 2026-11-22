@@ -1,5 +1,4 @@
 import type {
-    ModelCreateAssetRequest,
     ModelCreateSubjectRequest,
     ModelSubject
 } from '@/ts/types/api';
@@ -25,39 +24,6 @@ export const createSubject = async ( payload: ModelCreateSubjectRequest ): Promi
     const response = await request.put( '/subjects/create', JSON.stringify( payload ) );
 
     return await readCreatedId( response );
-};
-
-export const createAsset = async ( payload: ModelCreateAssetRequest ): Promise<number> => {
-    const response = await request.put( '/assets/create', JSON.stringify( payload ) );
-
-    return await readCreatedId( response );
-};
-
-export const uploadAsset = async ( assetId: number, file: File ): Promise<void> => {
-    const backendUrl = request.getBackendURL();
-
-    backendUrl.pathname = `/assets/upload/${ assetId }`;
-
-    const formData = new FormData();
-
-    formData.append( 'file', file );
-
-    const response = await fetch( backendUrl, {
-        'body': formData,
-        'credentials': 'include',
-        'method': 'PUT',
-        'redirect': 'manual'
-    } );
-
-    if ( response.type === 'opaqueredirect' ) {
-        Reflect.apply( EventTarget.prototype.dispatchEvent, document, [ new Event( 'autherror' ) ] );
-
-        throw new Error( 'Your session is no longer authorized. Please log in again.' );
-    }
-
-    if ( !response.ok ) {
-        throw new Error( `Unable to upload "${ file.name }" (HTTP ${ response.status }).` );
-    }
 };
 
 export const associateAssetsToSubject = async ( subjectId: number, assetIds: number[] ): Promise<void> => {

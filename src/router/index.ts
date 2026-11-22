@@ -68,15 +68,6 @@ const router = createRouter( {
                 'title': 'Subjects',
                 'auth': true
             }
-        },
-        {
-            'path': '/subjects/tree',
-            'name': 'subject-tree',
-            'component': () => import( '@/components/subjects/SubjectTree.vue' ),
-            'meta': {
-                'title': 'Subject',
-                'auth': true
-            }
         }
     ]
 } );
