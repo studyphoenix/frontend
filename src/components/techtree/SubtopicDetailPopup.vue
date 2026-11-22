@@ -455,63 +455,6 @@
                         v-if="hasAnyAssets"
                         class="d-flex flex-column ga-3 flex-grow-1"
                     >
-                        <v-list
-                            v-if="( detail.assets ?? [] ).length > 0"
-                            class="py-0 bg-transparent"
-                            density="comfortable"
-                        >
-                            <v-list-item
-                                v-for="asset in detail.assets"
-                                :key="asset.id"
-                                class="item-row px-2 rounded"
-                                :subtitle="formatMediaBadge( asset.mediaType )"
-                                :title="asset.name"
-                            >
-                                <template #prepend>
-                                    <v-icon
-                                        :icon="asset.icon || 'mdi-file-document-outline'"
-                                        size="20"
-                                    />
-                                </template>
-
-                                <template #append>
-                                    <div class="d-flex align-center ga-1">
-                                        <v-btn
-                                            aria-label="Download asset"
-                                            color="medium-emphasis"
-                                            density="comfortable"
-                                            :href="getAssetDownloadUrl( asset.id )"
-                                            icon
-                                            size="small"
-                                            target="_blank"
-                                            variant="text"
-                                        >
-                                            <v-icon
-                                                icon="mdi-download"
-                                                size="20"
-                                            />
-                                        </v-btn>
-
-                                        <v-btn
-                                            aria-label="Remove asset from subtopic"
-                                            color="medium-emphasis"
-                                            density="comfortable"
-                                            icon
-                                            size="small"
-                                            title="Remove from subtopic"
-                                            variant="text"
-                                            @click="askRemoveAsset( asset )"
-                                        >
-                                            <v-icon
-                                                icon="mdi-link-variant-off"
-                                                size="20"
-                                            />
-                                        </v-btn>
-                                    </div>
-                                </template>
-                            </v-list-item>
-                        </v-list>
-
                         <div v-if="inheritedSubjectAssets.length > 0">
                             <div class="d-flex align-center ga-2 text-caption text-medium-emphasis mb-1 px-1">
                                 <v-icon
@@ -555,6 +498,72 @@
                                                 size="20"
                                             />
                                         </v-btn>
+                                    </template>
+                                </v-list-item>
+                            </v-list>
+                        </div>
+
+                        <div v-if="( detail.assets ?? [] ).length > 0">
+                            <div class="d-flex align-center ga-2 text-caption text-medium-emphasis mb-1 px-1">
+                                <v-icon
+                                    icon="mdi-sitemap"
+                                    size="16"
+                                />
+                                <span>From subtopic</span>
+                            </div>
+
+                            <v-list
+                                class="py-0 bg-transparent"
+                                density="comfortable"
+                            >
+                                <v-list-item
+                                    v-for="asset in detail.assets"
+                                    :key="asset.id"
+                                    class="item-row px-2 rounded"
+                                    :subtitle="formatMediaBadge( asset.mediaType )"
+                                    :title="asset.name"
+                                >
+                                    <template #prepend>
+                                        <v-icon
+                                            :icon="asset.icon || 'mdi-file-document-outline'"
+                                            size="20"
+                                        />
+                                    </template>
+
+                                    <template #append>
+                                        <div class="d-flex align-center ga-1">
+                                            <v-btn
+                                                aria-label="Download asset"
+                                                color="medium-emphasis"
+                                                density="comfortable"
+                                                :href="getAssetDownloadUrl( asset.id )"
+                                                icon
+                                                size="small"
+                                                target="_blank"
+                                                variant="text"
+                                            >
+                                                <v-icon
+                                                    icon="mdi-download"
+                                                    size="20"
+                                                />
+                                            </v-btn>
+
+                                            <v-btn
+                                                aria-label="Remove asset from subtopic"
+                                                color="medium-emphasis"
+                                                density="comfortable"
+                                                icon
+                                                size="small"
+                                                title="Remove from subtopic"
+                                                variant="text"
+                                                @click="askRemoveAsset( asset )"
+                                            >
+                                                <v-icon
+                                                    icon="mdi-link-variant-off"
+                                                    size="20"
+                                                />
+                                            </v-btn>
+                                        </div>
                                     </template>
                                 </v-list-item>
                             </v-list>
