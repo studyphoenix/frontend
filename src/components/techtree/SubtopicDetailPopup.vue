@@ -6,9 +6,17 @@
     } from '@/ts/types/api';
     import {
         computed,
+        onBeforeUnmount,
+        onMounted,
         ref,
         watch
     } from 'vue';
+    import {
+        formatMediaBadge,
+        getAssetDownloadUrl,
+        openAssetManager,
+        showAssetManager
+    } from '@/composables/asset-manager';
     import {
         CHAT_MODES
     } from '@/ts/util/chat-modes';
@@ -16,11 +24,11 @@
     import NewChatDialog from '@/components/techtree/NewChatDialog.vue';
     import PopupElement from '@/components/custom-ui-elements/PopupElement.vue';
     import {
-        request
-    } from '@janishutz/oidc-login-sdk-browser';
-    import {
         useRouter
     } from 'vue-router';
+    import {
+        useSubjectAssets
+    } from '@/composables/subject-assets';
     import {
         useTechTree
     } from '@/composables/techtree';
@@ -36,8 +44,14 @@
     } );
     const props = defineProps<{
         'subtopic': ModelSubtopic | null;
+        'subjectId'?: number;
     }>();
     const router = useRouter();
+    const {
+        subjectAssets,
+        fetchSubjectAssets,
+        removeSubjectAssetLocally
+    } = useSubjectAssets();
     const {
         activeSubtopic,
         subtopicLoading,
@@ -45,12 +59,12 @@
         fetchSubtopicDetails,
         createAndAttachChat,
         deleteChat,
-        uploadAndAttachAsset,
-        deleteAsset
+        associateAssetToSubtopic,
+        deassociateAssetFromSubtopic,
+        removeAssetLocally
     } = useTechTree();
-    const uploadingAsset = ref( false );
-    const isDragging = ref( false );
-    const fileInput = ref<HTMLInputElement | null>( null );
+    const attachingAsset = ref( false );
+    const waitingForAssetSelection = ref( false );
     const newChatDialogOpen = ref( false );
     const creatingChat = ref( false );
     const pendingRemoval = ref<PendingRemoval | null>( null );
@@ -108,21 +122,29 @@
             }
         }
     } );
-    const confirmMessage = computed( () => `Are you sure you want to delete "${ pendingRemoval.value?.name ?? '' }"?` );
-
-    const formatMediaBadge = ( mediaType: string ): string => {
-        const sub = mediaType.split( '/' ).pop() ?? 'file';
-
-        return sub.toUpperCase();
-    };
-
-    const getAssetDownloadUrl = ( assetId: number ): string => {
-        if ( import.meta.env.VITE_BACKENDLESS === 'true' ) {
-            return '#';
+    const confirmTitle = computed( () => {
+        return pendingRemoval.value?.kind === 'chat'
+            ? 'Delete chat?'
+            : 'Remove asset from subtopic?';
+    } );
+    const confirmMessage = computed( () => {
+        if ( pendingRemoval.value?.kind === 'chat' ) {
+            return `Are you sure you want to delete "${ pendingRemoval.value.name }"?`;
         }
 
-        return new URL( `/assets/download/${ assetId }`, request.getBackendURL() ).toString();
-    };
+        return `Remove "${ pendingRemoval.value?.name ?? '' }" from this subtopic? The file will stay in your Asset Manager.`;
+    } );
+    const confirmLabel = computed( () => {
+        return pendingRemoval.value?.kind === 'chat' ? 'Delete' : 'Remove';
+    } );
+    const inheritedSubjectAssets = computed( () => {
+        const subtopicIds = new Set( ( detail.value?.assets ?? [] ).map( a => a.id ) );
+
+        return subjectAssets.value.filter( sa => !subtopicIds.has( sa.id ) );
+    } );
+    const hasAnyAssets = computed( () => {
+        return ( detail.value?.assets ?? [] ).length > 0 || inheritedSubjectAssets.value.length > 0;
+    } );
 
     watch( [
         isOpen,
@@ -134,8 +156,57 @@
         if ( open && subtopicId ) {
             newChatDialogOpen.value = false;
             pendingRemoval.value = null;
+            waitingForAssetSelection.value = false;
             await fetchSubtopicDetails( subtopicId, props.subtopic );
+
+            if ( props.subjectId && props.subjectId > 0 ) {
+                await fetchSubjectAssets( props.subjectId );
+            }
+        } else if ( !open ) {
+            waitingForAssetSelection.value = false;
         }
+    } );
+
+    watch( showAssetManager, open => {
+        if ( !open ) {
+            waitingForAssetSelection.value = false;
+        }
+    } );
+
+    const handleAssetSelected = async ( event: CustomEvent<number> ) => {
+        if ( !waitingForAssetSelection.value || !isOpen.value ) {
+            return;
+        }
+
+        waitingForAssetSelection.value = false;
+        const target = detail.value;
+
+        if ( !target ) {
+            return;
+        }
+
+        attachingAsset.value = true;
+
+        try {
+            await associateAssetToSubtopic( target.id, event.detail );
+        } finally {
+            attachingAsset.value = false;
+        }
+    };
+
+    const handleAssetDeleted = ( event: CustomEvent<number> ) => {
+        removeAssetLocally( event.detail );
+        removeSubjectAssetLocally( event.detail, props.subjectId );
+    };
+
+    onMounted( () => {
+        document.addEventListener( 'studyphoenix:assets:select', handleAssetSelected );
+        document.addEventListener( 'studyphoenix:assets:deleted', handleAssetDeleted );
+    } );
+
+    onBeforeUnmount( () => {
+        document.removeEventListener( 'studyphoenix:assets:select', handleAssetSelected );
+        document.removeEventListener( 'studyphoenix:assets:deleted', handleAssetDeleted );
     } );
 
     const openNewChatDialog = () => {
@@ -214,55 +285,30 @@
             if ( item.kind === 'chat' ) {
                 await deleteChat( target.id, item.id );
             } else {
-                await deleteAsset( target.id, item.id );
+                await deassociateAssetFromSubtopic( target.id, item.id );
             }
 
             if ( !subtopicError.value ) {
                 pendingRemoval.value = null;
             }
         } catch ( err ) {
-            subtopicError.value = err instanceof Error ? err.message : 'Delete failed';
+            subtopicError.value = err instanceof Error ? err.message : 'Action failed';
         } finally {
             removingItem.value = false;
         }
     };
 
-    const uploadFile = async ( file: File ) => {
-        const target = detail.value;
+    const openAssetPicker = () => {
+        subtopicError.value = null;
+        waitingForAssetSelection.value = true;
+        const attachedIds = [
+            ...( detail.value?.assets ?? [] ).map( asset => asset.id ),
+            ...subjectAssets.value.map( asset => asset.id )
+        ];
 
-        if ( !target ) {
-            return;
-        }
-
-        uploadingAsset.value = true;
-        await uploadAndAttachAsset( target.id, file );
-        uploadingAsset.value = false;
-    };
-
-    const triggerFilePicker = () => {
-        fileInput.value?.click();
-    };
-
-    const handleFileSelected = async ( event: Event ) => {
-        const input = event.target as HTMLInputElement | null;
-        const file = input?.files?.[0];
-
-        if ( file ) {
-            await uploadFile( file );
-        }
-
-        if ( input ) {
-            input.value = '';
-        }
-    };
-
-    const handleDrop = async ( event: DragEvent ) => {
-        isDragging.value = false;
-        const file = event.dataTransfer?.files?.[0];
-
-        if ( file ) {
-            await uploadFile( file );
-        }
+        openAssetManager( 'select', {
+            'disabledIds': attachedIds
+        } );
     };
 </script>
 
@@ -400,100 +446,140 @@
                 <v-divider class="d-none d-md-block" vertical />
                 <v-divider class="d-md-none my-4" />
 
-                <div
-                    class="popup-col d-flex flex-column assets-dropzone"
-                    :class="{ 'is-dragging': isDragging }"
-                    @dragleave.prevent="isDragging = false"
-                    @dragover.prevent="isDragging = true"
-                    @drop.prevent="handleDrop"
-                >
+                <div class="popup-col d-flex flex-column">
                     <h3 class="text-subtitle-1 font-weight-medium mb-3">
                         Assets
                     </h3>
 
-                    <v-list
-                        v-if="( detail.assets ?? [] ).length > 0"
-                        class="py-0 bg-transparent flex-grow-1"
-                        density="comfortable"
+                    <div
+                        v-if="hasAnyAssets"
+                        class="d-flex flex-column ga-3 flex-grow-1"
                     >
-                        <v-list-item
-                            v-for="asset in detail.assets"
-                            :key="asset.id"
-                            class="item-row px-2 rounded"
-                            :subtitle="formatMediaBadge( asset.mediaType )"
-                            :title="asset.name"
+                        <v-list
+                            v-if="( detail.assets ?? [] ).length > 0"
+                            class="py-0 bg-transparent"
+                            density="comfortable"
                         >
-                            <template #prepend>
+                            <v-list-item
+                                v-for="asset in detail.assets"
+                                :key="asset.id"
+                                class="item-row px-2 rounded"
+                                :subtitle="formatMediaBadge( asset.mediaType )"
+                                :title="asset.name"
+                            >
+                                <template #prepend>
+                                    <v-icon
+                                        :icon="asset.icon || 'mdi-file-document-outline'"
+                                        size="20"
+                                    />
+                                </template>
+
+                                <template #append>
+                                    <div class="d-flex align-center ga-1">
+                                        <v-btn
+                                            aria-label="Download asset"
+                                            color="medium-emphasis"
+                                            density="comfortable"
+                                            :href="getAssetDownloadUrl( asset.id )"
+                                            icon
+                                            size="small"
+                                            target="_blank"
+                                            variant="text"
+                                        >
+                                            <v-icon
+                                                icon="mdi-download"
+                                                size="20"
+                                            />
+                                        </v-btn>
+
+                                        <v-btn
+                                            aria-label="Remove asset from subtopic"
+                                            color="medium-emphasis"
+                                            density="comfortable"
+                                            icon
+                                            size="small"
+                                            title="Remove from subtopic"
+                                            variant="text"
+                                            @click="askRemoveAsset( asset )"
+                                        >
+                                            <v-icon
+                                                icon="mdi-link-variant-off"
+                                                size="20"
+                                            />
+                                        </v-btn>
+                                    </div>
+                                </template>
+                            </v-list-item>
+                        </v-list>
+
+                        <div v-if="inheritedSubjectAssets.length > 0">
+                            <div class="d-flex align-center ga-2 text-caption text-medium-emphasis mb-1 px-1">
                                 <v-icon
-                                    :icon="asset.icon || 'mdi-file-document-outline'"
-                                    size="20"
+                                    icon="mdi-folder-outline"
+                                    size="16"
                                 />
-                            </template>
+                                <span>From subject</span>
+                            </div>
 
-                            <template #append>
-                                <div class="d-flex align-center ga-1">
-                                    <v-btn
-                                        aria-label="Download asset"
-                                        color="medium-emphasis"
-                                        density="comfortable"
-                                        :href="getAssetDownloadUrl( asset.id )"
-                                        icon
-                                        size="small"
-                                        target="_blank"
-                                        variant="text"
-                                    >
+                            <v-list
+                                class="py-0 bg-transparent"
+                                density="comfortable"
+                            >
+                                <v-list-item
+                                    v-for="asset in inheritedSubjectAssets"
+                                    :key="asset.id"
+                                    class="item-row px-2 rounded"
+                                    :subtitle="formatMediaBadge( asset.mediaType )"
+                                    :title="asset.name"
+                                >
+                                    <template #prepend>
                                         <v-icon
-                                            icon="mdi-download"
+                                            :icon="asset.icon || 'mdi-file-document-outline'"
                                             size="20"
                                         />
-                                    </v-btn>
+                                    </template>
 
-                                    <v-btn
-                                        aria-label="Delete asset"
-                                        color="medium-emphasis"
-                                        density="comfortable"
-                                        icon
-                                        size="small"
-                                        variant="text"
-                                        @click="askRemoveAsset( asset )"
-                                    >
-                                        <v-icon
-                                            icon="mdi-delete-outline"
-                                            size="20"
-                                        />
-                                    </v-btn>
-                                </div>
-                            </template>
-                        </v-list-item>
-                    </v-list>
+                                    <template #append>
+                                        <v-btn
+                                            aria-label="Download asset"
+                                            color="medium-emphasis"
+                                            density="comfortable"
+                                            :href="getAssetDownloadUrl( asset.id )"
+                                            icon
+                                            size="small"
+                                            target="_blank"
+                                            variant="text"
+                                        >
+                                            <v-icon
+                                                icon="mdi-download"
+                                                size="20"
+                                            />
+                                        </v-btn>
+                                    </template>
+                                </v-list-item>
+                            </v-list>
+                        </div>
+                    </div>
 
                     <div
                         v-else
                         class="text-body-2 text-medium-emphasis py-4 flex-grow-1"
                     >
-                        No assets attached yet. Drop a file here or add one below.
+                        No assets attached yet. Add one from the Asset Manager below.
                     </div>
 
                     <div class="mt-4">
                         <v-btn
                             block
                             color="on-surface"
-                            :loading="uploadingAsset"
+                            :loading="attachingAsset"
                             prepend-icon="mdi-plus"
                             variant="outlined"
-                            @click="triggerFilePicker"
+                            @click="openAssetPicker"
                         >
-                            Add file
+                            Add asset
                         </v-btn>
                     </div>
-
-                    <input
-                        ref="fileInput"
-                        accept=".pdf,.png,.jpg,.jpeg,.json"
-                        class="d-none"
-                        type="file"
-                        @change="handleFileSelected"
-                    >
                 </div>
             </div>
         </div>
@@ -511,10 +597,11 @@
 
     <ConfirmDeleteDialog
         v-model="confirmDialogOpen"
+        :confirm-label="confirmLabel"
         :error="subtopicError"
         :loading="removingItem"
         :message="confirmMessage"
-        :title="`Delete ${ pendingRemoval?.kind === 'chat' ? 'chat' : 'asset' }?`"
+        :title="confirmTitle"
         @clear-error="subtopicError = null"
         @confirm="confirmRemove"
     />
@@ -535,16 +622,5 @@
     .popup-col {
         flex: 1 1 0;
         min-width: 0;
-    }
-
-    .assets-dropzone {
-        border-radius: 6px;
-        transition: background-color 0.15s ease;
-
-        &.is-dragging {
-            background-color: rgba(var(--v-theme-primary), 0.08);
-            outline: 1px dashed rgba(var(--v-theme-primary), 0.6);
-            outline-offset: 6px;
-        }
     }
 </style>
