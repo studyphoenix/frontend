@@ -25,7 +25,7 @@
         } catch { /* */ }
 
         void router.push( {
-            'name': 'subject-tree'
+            'name': 'techtree'
         } );
     };
 
