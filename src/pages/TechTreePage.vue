@@ -15,6 +15,7 @@
         ModelSubtopic
     } from '@/ts/types/api';
     import SideBar from '@/components/SideBar.vue';
+    import SubjectAssetsDialog from '@/components/techtree/SubjectAssetsDialog.vue';
     import SubtopicDetailPopup from '@/components/techtree/SubtopicDetailPopup.vue';
     import TechTreeNode from '@/components/techtree/TechTreeNode.vue';
     import {
@@ -27,10 +28,17 @@
         useStateStore
     } from '@/stores/statestore';
     import {
+        useSubjectAssets
+    } from '@/composables/subject-assets';
+    import {
         useTechTree
     } from '@/composables/techtree';
 
     const stateStore = useStateStore();
+    const {
+        subjectAssets,
+        fetchSubjectAssets
+    } = useSubjectAssets();
     const {
         subtopics,
         loading,
@@ -44,6 +52,10 @@
     const popupOpen = ref( false );
     const createSubjectDialogOpen = ref( false );
     const createSubtopicDialogOpen = ref( false );
+    const subjectAssetsDialogOpen = ref( false );
+    const selectedSubjectItem = computed( () => {
+        return stateStore.subjects.find( s => s.id === stateStore.selectedSubject ) ?? null;
+    } );
 
     const handleFlowInit = ( instance: VueFlowStore ) => {
         flowInstance.value = instance;
@@ -75,7 +87,10 @@
         }
 
         localStorage.setItem( 'sp-selected-subject', String( subjectId ) );
-        await fetchTechTree( subjectId );
+        await Promise.all( [
+            fetchTechTree( subjectId ),
+            fetchSubjectAssets( subjectId )
+        ] );
     };
 
     const openCreateSubjectDialog = () => {
@@ -110,138 +125,171 @@
     <v-container class="techtree-page fill-height d-flex flex-column align-stretch pa-6" fluid>
         <SideBar />
 
-        <div class="d-flex align-center justify-space-between w-100 mb-4 ga-4">
-            <h1>
-                Tech Tree
-            </h1>
+        <div class="tree-shell">
+            <div class="tree-header d-flex align-center justify-space-between ga-4 flex-wrap px-5 py-3">
+                <div class="min-width-0">
+                    <h1 class="text-h6 font-weight-bold text-truncate">
+                        {{ selectedSubjectItem?.name ?? 'Tech Tree' }}
+                    </h1>
+                </div>
 
-            <div v-if="stateStore.subjects.length > 0" class="d-flex align-center ga-2">
-                <v-select
-                    v-model="stateStore.selectedSubject"
-                    density="compact"
-                    hide-details
-                    item-title="name"
-                    item-value="id"
-                    :items="stateStore.subjects"
-                    label="Subject"
-                    max-width="280"
-                    min-width="220"
-                />
-                <v-btn
-                    aria-label="Create Subject"
-                    color="on-surface"
-                    density="comfortable"
-                    icon="mdi-plus"
-                    title="Create Subject"
-                    variant="outlined"
-                    @click="openCreateSubjectDialog"
-                />
-            </div>
-        </div>
-
-        <div class="tree-canvas">
-            <div v-if="loading" class="d-flex align-center justify-center fill-height">
-                <v-progress-circular indeterminate />
-            </div>
-
-            <v-alert
-                v-else-if="error || stateStore.subjectsError"
-                :icon="false"
-                type="error"
-                variant="tonal"
-            >
-                {{ error || stateStore.subjectsError }}
-            </v-alert>
-
-            <div
-                v-else-if="stateStore.subjects.length === 0"
-                class="d-flex flex-column align-center justify-center fill-height ga-3 text-medium-emphasis"
-            >
-                <span>No subjects found yet. Create a subject first.</span>
-                <v-btn
-                    color="on-surface"
-                    prepend-icon="mdi-plus"
-                    variant="outlined"
-                    @click="openCreateSubjectDialog"
-                >
-                    Create Subject
-                </v-btn>
-            </div>
-
-            <div
-                v-else-if="graph.nodes.length === 0"
-                class="d-flex flex-column align-center justify-center fill-height ga-3 text-medium-emphasis"
-            >
-                <span>No subtopics found for this subject yet.</span>
-                <v-btn
-                    color="on-surface"
-                    prepend-icon="mdi-plus"
-                    variant="outlined"
-                    @click="openCreateSubtopicDialog"
-                >
-                    Create Subtopic
-                </v-btn>
-            </div>
-
-            <VueFlow
-                v-else
-                :key="stateStore.selectedSubject"
-                :edges="graph.edges"
-                :elements-selectable="false"
-                fit-view-on-init
-                :max-zoom="1.5"
-                :min-zoom="0.3"
-                :nodes="graph.nodes"
-                :nodes-connectable="false"
-                :nodes-draggable="false"
-                :zoom-on-double-click="false"
-                @init="handleFlowInit"
-                @node-click="handleNodeClick"
-            >
-                <template #node-tech-node="nodeProps">
-                    <TechTreeNode :subtopic="nodeProps.data.subtopic" />
-                </template>
-            </VueFlow>
-
-            <div v-if="graph.nodes.length > 0" class="canvas-legend d-flex align-center ga-4 px-3 py-1 text-caption text-medium-emphasis">
-                <div class="d-flex align-center ga-1">
-                    <v-icon
-                        color="success"
-                        icon="mdi-check-circle"
-                        size="14"
+                <div v-if="stateStore.subjects.length > 0" class="d-flex align-center ga-2">
+                    <v-select
+                        v-model="stateStore.selectedSubject"
+                        density="compact"
+                        hide-details
+                        item-title="name"
+                        item-value="id"
+                        :items="stateStore.subjects"
+                        label="Subject"
+                        max-width="260"
+                        min-width="200"
+                        variant="outlined"
                     />
-                    <span>Completed</span>
-                </div>
-
-                <div class="d-flex align-center ga-1">
-                    <span class="legend-dot bg-primary"></span>
-                    <span>In Progress</span>
-                </div>
-
-                <div class="d-flex align-center ga-1">
-                    <span class="legend-dot bg-surface-variant"></span>
-                    <span>Not Started</span>
+                    <v-btn
+                        aria-label="Create Subject"
+                        class="header-action-btn header-icon-btn"
+                        color="on-surface"
+                        height="40"
+                        icon="mdi-plus"
+                        title="Create Subject"
+                        variant="outlined"
+                        width="40"
+                        @click="openCreateSubjectDialog"
+                    />
+                    <v-btn
+                        v-if="selectedSubjectItem"
+                        class="header-action-btn"
+                        color="on-surface"
+                        height="40"
+                        prepend-icon="mdi-folder-outline"
+                        variant="outlined"
+                        @click="subjectAssetsDialogOpen = true"
+                    >
+                        Subject Assets
+                        <span
+                            v-if="subjectAssets.length > 0"
+                            class="text-caption text-medium-emphasis ml-1"
+                        >
+                            ({{ subjectAssets.length }})
+                        </span>
+                    </v-btn>
                 </div>
             </div>
 
-            <div v-if="graph.nodes.length > 0" class="canvas-controls d-flex align-center pa-1">
-                <v-btn
-                    density="compact"
-                    icon="mdi-crosshairs-gps"
-                    size="small"
-                    title="Recenter view"
-                    variant="text"
-                    @click="handleFitView"
-                />
+            <div class="tree-canvas">
+                <div v-if="loading" class="d-flex align-center justify-center fill-height">
+                    <v-progress-circular indeterminate />
+                </div>
+
+                <v-alert
+                    v-else-if="error || stateStore.subjectsError"
+                    :icon="false"
+                    type="error"
+                    variant="tonal"
+                >
+                    {{ error || stateStore.subjectsError }}
+                </v-alert>
+
+                <div
+                    v-else-if="stateStore.subjects.length === 0"
+                    class="d-flex flex-column align-center justify-center fill-height ga-3 text-medium-emphasis"
+                >
+                    <span>No subjects found yet. Create a subject first.</span>
+                    <v-btn
+                        color="on-surface"
+                        prepend-icon="mdi-plus"
+                        variant="outlined"
+                        @click="openCreateSubjectDialog"
+                    >
+                        Create Subject
+                    </v-btn>
+                </div>
+
+                <div
+                    v-else-if="graph.nodes.length === 0"
+                    class="d-flex flex-column align-center justify-center fill-height ga-3 text-medium-emphasis"
+                >
+                    <span>No subtopics found for this subject yet.</span>
+                    <v-btn
+                        color="on-surface"
+                        prepend-icon="mdi-plus"
+                        variant="outlined"
+                        @click="openCreateSubtopicDialog"
+                    >
+                        Create Subtopic
+                    </v-btn>
+                </div>
+
+                <VueFlow
+                    v-else
+                    :key="stateStore.selectedSubject"
+                    :edges="graph.edges"
+                    :elements-selectable="false"
+                    fit-view-on-init
+                    :max-zoom="1.5"
+                    :min-zoom="0.3"
+                    :nodes="graph.nodes"
+                    :nodes-connectable="false"
+                    :nodes-draggable="false"
+                    :zoom-on-double-click="false"
+                    @init="handleFlowInit"
+                    @node-click="handleNodeClick"
+                >
+                    <template #node-tech-node="nodeProps">
+                        <TechTreeNode :subtopic="nodeProps.data.subtopic" />
+                    </template>
+                </VueFlow>
+
+                <div
+                    v-if="graph.nodes.length > 0"
+                    class="canvas-legend d-flex align-center ga-4 px-3 py-1 text-caption text-medium-emphasis"
+                >
+                    <div class="d-flex align-center ga-1">
+                        <v-icon
+                            color="success"
+                            icon="mdi-check-circle"
+                            size="14"
+                        />
+                        <span>Completed</span>
+                    </div>
+
+                    <div class="d-flex align-center ga-1">
+                        <span class="legend-dot bg-primary"></span>
+                        <span>In Progress</span>
+                    </div>
+
+                    <div class="d-flex align-center ga-1">
+                        <span class="legend-dot bg-surface-variant"></span>
+                        <span>Not Started</span>
+                    </div>
+                </div>
+
+                <div v-if="graph.nodes.length > 0" class="canvas-controls d-flex align-center pa-1">
+                    <v-btn
+                        density="compact"
+                        icon="mdi-crosshairs-gps"
+                        size="small"
+                        title="Recenter view"
+                        variant="text"
+                        @click="handleFitView"
+                    />
+                </div>
             </div>
         </div>
 
         <SubtopicDetailPopup
             v-model="popupOpen"
+            :subject-id="stateStore.selectedSubject"
             :subtopic="selectedSubtopic"
         />
 
         <CreateSubjectDialog v-model="createSubjectDialogOpen" />
+
+        <SubjectAssetsDialog
+            v-model="subjectAssetsDialogOpen"
+            :subject="selectedSubjectItem"
+        />
 
         <CreateSubtopicDialog
             v-model="createSubtopicDialogOpen"
@@ -258,13 +306,39 @@
         flex-wrap: nowrap;
     }
 
+    .tree-shell {
+        width: 100%;
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        border-radius: 8px;
+        border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+        background-color: rgb(var(--v-theme-surface));
+        overflow: hidden;
+    }
+
+    .tree-header {
+        border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+
+        .header-action-btn {
+            border-color: rgba(var(--v-border-color), 0.38);
+
+            &:hover {
+                border-color: rgba(var(--v-border-color), 0.87);
+            }
+        }
+
+        .header-icon-btn {
+            border-radius: 4px;
+        }
+    }
+
     .tree-canvas {
         width: 100%;
         flex: 1 1 0;
         min-height: 400px;
         position: relative;
-        border-radius: 8px;
-        border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
         background-color: rgb(var(--v-theme-surface));
         background-image: radial-gradient(rgba(var(--v-theme-on-surface), 0.12) 1px, transparent 1px);
         background-size: 24px 24px;
