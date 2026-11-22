@@ -5,20 +5,61 @@
         watch
     } from 'vue';
     import {
+        assetManagerMode,
+        assetsList,
         getIconForMediaType,
-        loadAssets
+        loadAssets,
+        selectedAssetId
     } from '@/composables/asset-manager';
+    import type {
+        ModelAsset
+    } from '@/ts/types/api';
     import {
         request
     } from '@janishutz/oidc-login-sdk-browser';
 
+    interface UploadTypeMeta {
+        'mediaType': string;
+        'ext': string;
+    }
+
+    const SUPPORTED_UPLOAD_TYPES: Record<string, UploadTypeMeta> = {
+        'application/pdf': {
+            'mediaType': 'application/pdf',
+            'ext': 'pdf'
+        },
+        'application/json': {
+            'mediaType': 'application/json',
+            'ext': 'json'
+        },
+        'image/png': {
+            'mediaType': 'image/png',
+            'ext': 'png'
+        },
+        'image/jpeg': {
+            'mediaType': 'image/jpeg',
+            'ext': 'jpg'
+        },
+        'image/jpg': {
+            'mediaType': 'image/jpg',
+            'ext': 'jpg'
+        }
+    };
+    const EXT_TO_MEDIA_TYPE: Record<string, string> = {
+        'pdf': 'application/pdf',
+        'json': 'application/json',
+        'png': 'image/png',
+        'jpg': 'image/jpg',
+        'jpeg': 'image/jpeg'
+    };
+    const isBackendless = import.meta.env.VITE_BACKENDLESS === 'true';
     const isOpen = defineModel<boolean>( {
         'default': false
     } );
     const name = ref( '' );
     const creating = ref( false );
     const dialogError = ref<string | null>( null );
-    const files: Ref<File[]> = ref( [] );
+    const files: Ref<File[] | File | undefined> = ref( [] );
 
     watch( isOpen, open => {
         if ( open ) {
@@ -28,13 +69,50 @@
         }
     } );
 
+    const resolveSelectedFile = (): File | null => {
+        if ( Array.isArray( files.value ) ) {
+            return files.value[0] ?? null;
+        }
+
+        return files.value ?? null;
+    };
+
+    const resolveUploadMeta = ( file: File ): UploadTypeMeta | null => {
+        const mimeType = file.type.trim().toLowerCase();
+
+        if ( SUPPORTED_UPLOAD_TYPES[mimeType] ) {
+            return SUPPORTED_UPLOAD_TYPES[mimeType];
+        }
+
+        const ext = file.name.split( '.' ).pop()
+            ?.toLowerCase() ?? '';
+        const mappedType = EXT_TO_MEDIA_TYPE[ext];
+
+        if ( mappedType && SUPPORTED_UPLOAD_TYPES[mappedType] ) {
+            return SUPPORTED_UPLOAD_TYPES[mappedType];
+        }
+
+        return null;
+    };
+
     const handleSubmit = async () => {
-        if ( name.value.length < 3 ) {
-            dialogError.value = 'Subject name must be at least 3 ASCII characters.';
+        const cleanName = name.value.replace( /[^\x20-\x7E]/g, '' ).trim();
+        const file = resolveSelectedFile();
+
+        if ( cleanName.length < 3 ) {
+            dialogError.value = 'Asset name must be at least 3 ASCII characters.';
 
             return;
-        } else if ( files.value.length < 1 ) {
+        } else if ( !file ) {
             dialogError.value = 'Cannot create an asset without a file.';
+
+            return;
+        }
+
+        const uploadMeta = resolveUploadMeta( file );
+
+        if ( !uploadMeta ) {
+            dialogError.value = 'Unsupported file type. Supported: PDF, PNG, JPG, JSON.';
 
             return;
         }
@@ -43,17 +121,42 @@
         creating.value = true;
 
         try {
+            if ( isBackendless ) {
+                const mockAsset: ModelAsset = {
+                    'id': Date.now(),
+                    'name': cleanName.slice( 0, 100 ),
+                    'icon': getIconForMediaType( uploadMeta.mediaType ),
+                    'mediaType': uploadMeta.mediaType,
+                    'updatedAt': new Date().toISOString()
+                };
+
+                assetsList.value = [
+                    ...assetsList.value,
+                    mockAsset
+                ];
+
+                if ( assetManagerMode.value === 'select' ) {
+                    selectedAssetId.value = mockAsset.id;
+                }
+
+                isOpen.value = false;
+                name.value = '';
+                files.value = [];
+
+                return;
+            }
+
             const res = await request.put( '/assets/create', JSON.stringify( {
-                'name': name.value,
-                'icon': getIconForMediaType( files.value[0].type ),
-                'mediaType': files.value[0].type
+                'name': cleanName.slice( 0, 100 ),
+                'icon': getIconForMediaType( uploadMeta.mediaType ),
+                'mediaType': uploadMeta.mediaType
             } ) );
 
             if ( res.ok ) {
-                const id = ( await res.json() ).id;
+                const id = ( await res.json() ).id as number;
                 const fd = new FormData();
 
-                fd.append( 'file', files.value[0] );
+                fd.append( 'file', file, `${ id }.${ uploadMeta.ext }` );
 
                 const uploadRes = await request.sendFormData( `/assets/upload/${ id }`, fd );
 
@@ -61,13 +164,19 @@
                     isOpen.value = false;
                     name.value = '';
                     files.value = [];
-                    loadAssets();
+                    await loadAssets();
+
+                    if ( assetManagerMode.value === 'select' ) {
+                        selectedAssetId.value = id;
+                    }
                 } else {
                     dialogError.value = 'File failed to upload.';
                 }
             } else {
-                dialogError.value = 'Failed to create subject.';
+                dialogError.value = 'Failed to create asset.';
             }
+        } catch ( err ) {
+            dialogError.value = err instanceof Error ? err.message : 'Failed to create asset.';
         } finally {
             creating.value = false;
         }
@@ -87,7 +196,7 @@
                 Create Asset
             </h3>
             <p class="text-body-2 text-medium-emphasis mb-4">
-                Create an asset to upload a file to it.
+                Create an asset and upload a file (PDF, PNG, JPG or JSON).
             </p>
 
             <v-alert
@@ -124,11 +233,12 @@
 
             <v-file-upload
                 v-model="files"
+                accept=".pdf,.png,.jpg,.jpeg,.json"
                 density="comfortable"
-                variant="comfortable"
                 inset-file-list
-                show-size
                 :multiple="false"
+                show-size
+                variant="comfortable"
             />
 
             <div class="d-flex justify-end ga-2 mt-4">
