@@ -14,7 +14,7 @@
     } from '@/ts/ai/techtree-generator';
     import type {
         GeneratedTechTree
-    } from '@/ts/util/techtree-validator';
+    } from '@/ts/types/techtree-generation';
     import {
         request
     } from '@janishutz/oidc-login-sdk-browser';

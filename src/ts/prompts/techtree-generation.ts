@@ -1,8 +1,6 @@
-export interface TechTreePromptContext {
-    'subjectName': string;
-    'syllabusContext'?: string;
-    'assetNames'?: string[];
-}
+import type {
+    TechTreePromptContext
+} from '@/ts/types/techtree-generation';
 
 export const TECHTREE_GENERATION_SYSTEM_PROMPT = `You are designing a structured prerequisite learning graph ("Tech Tree") for a university course in StudyPhoenix.
 

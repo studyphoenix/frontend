@@ -4,10 +4,9 @@ import type {
     ModelChat,
     ModelSubtopic
 } from '@/ts/types/api';
-import {
-    type GeneratedTechTree,
-    toBulkCreatePayload
-} from '@/ts/util/techtree-validator';
+import type {
+    GeneratedTechTree
+} from '@/ts/types/techtree-generation';
 import {
     createSampleSubtopics
 } from './techtree-sample';
@@ -17,6 +16,9 @@ import {
 import {
     request
 } from '@janishutz/oidc-login-sdk-browser';
+import {
+    toBulkCreatePayload
+} from '@/ts/util/techtree-validator';
 
 interface AssetMeta {
     'mediaType': string;

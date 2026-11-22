@@ -1,14 +1,15 @@
-import {
-    type GeneratedTechTree,
-    parseAndValidateTechTree
-} from '@/ts/util/techtree-validator';
+import type {
+    GeneratedTechTree,
+    TechTreeLlmClient,
+    TechTreePromptContext
+} from '@/ts/types/techtree-generation';
 import {
     TECHTREE_GENERATION_SYSTEM_PROMPT,
-    type TechTreePromptContext,
     buildTechTreeUserPrompt
 } from '@/ts/prompts/techtree-generation';
-
-export type TechTreeLlmClient = ( systemPrompt: string, userPrompt: string ) => Promise<string>;
+import {
+    parseAndValidateTechTree
+} from '@/ts/util/techtree-validator';
 
 const getMockTopicsForCourse = ( subjectName: string ): string[] => {
     const lower = subjectName.toLowerCase();

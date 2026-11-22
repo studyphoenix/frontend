@@ -1,36 +1,11 @@
-export interface GeneratedSubtopic {
-    'id': number;
-    'name': string;
-    'layer': number;
-}
-
-export interface GeneratedEdge {
-    'from': number;
-    'to': number;
-}
-
-export interface GeneratedTechTree {
-    'subject': string;
-    'subtopics': GeneratedSubtopic[];
-    'edges': GeneratedEdge[];
-}
-
-export interface BulkCreateSubtopicItem {
-    'tempId': number;
-    'name': string;
-    'icon': string;
-}
-
-export interface BulkCreateEdge {
-    'from': number;
-    'to': number;
-}
-
-export interface BulkCreateTechTreeRequest {
-    'subjectId': number;
-    'subtopics': BulkCreateSubtopicItem[];
-    'edges': BulkCreateEdge[];
-}
+import type {
+    BulkCreateEdge,
+    BulkCreateSubtopicItem,
+    BulkCreateTechTreeRequest,
+    GeneratedEdge,
+    GeneratedSubtopic,
+    GeneratedTechTree
+} from '@/ts/types/techtree-generation';
 
 const MIN_SUBTOPICS = 6;
 const MAX_SUBTOPICS = 11;
