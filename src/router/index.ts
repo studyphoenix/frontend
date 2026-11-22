@@ -59,6 +59,15 @@ const router = createRouter( {
                 'title': 'Chat',
                 'auth': true
             }
+        },
+        {
+            'path': '/subjects',
+            'name': 'subject-picker',
+            'component': () => import( '@/components/subjects/SubjectPicker.vue' ),
+            'meta': {
+                'title': 'Subjects',
+                'auth': true
+            }
         }
     ]
 } );
