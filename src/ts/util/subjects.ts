@@ -50,7 +50,7 @@ export const uploadAsset = async ( assetId: number, file: File ): Promise<void> 
     } );
 
     if ( response.type === 'opaqueredirect' ) {
-        document.dispatchEvent( new CustomEvent( 'autherror' ) );
+        Reflect.apply( EventTarget.prototype.dispatchEvent, document, [ new Event( 'autherror' ) ] );
 
         throw new Error( 'Your session is no longer authorized. Please log in again.' );
     }
