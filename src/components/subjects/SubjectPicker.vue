@@ -8,6 +8,7 @@
     } from '@/ts/types/api';
     import router from '@/router';
     import CreateSubjectDialog from '@/components/subjects/CreateSubjectDialog.vue';
+    import SubjectContextMenu from '@/components/subjects/SubjectContextMenu.vue';
     import SideBar from '@/components/SideBar.vue';
     import {
         useStateStore
@@ -16,6 +17,11 @@
     const stateStore = useStateStore();
     const isLoading = ref( true );
     const isCreateDialogOpen = ref( false );
+    const contextMenuSubject = ref<ModelSubject | null>( null );
+    const contextMenuPosition = ref( {
+        'x': 0,
+        'y': 0
+    } );
 
     const toSubject = ( subject: ModelSubject ) => {
         stateStore.selectedSubject = subject.id;
@@ -31,6 +37,43 @@
 
     const openCreateDialog = () => {
         isCreateDialogOpen.value = true;
+    };
+
+    const openContextMenu = ( event: MouseEvent, subject: ModelSubject ) => {
+        event.preventDefault();
+        contextMenuSubject.value = subject;
+        contextMenuPosition.value = {
+            'x': Math.max( 8, Math.min( event.clientX, window.innerWidth - 188 ) ),
+            'y': Math.max( 8, Math.min( event.clientY, window.innerHeight - 104 ) )
+        };
+    };
+
+    const handleSubjectRenamed = ( update: { 'id': number; 'name': string } ) => {
+        stateStore.subjects = stateStore.subjects.map( subject => subject.id === update.id
+            ? {
+                ...subject,
+                'name': update.name
+            }
+            : subject );
+        contextMenuSubject.value = null;
+    };
+
+    const handleSubjectDeleted = ( subjectId: number ) => {
+        stateStore.subjects = stateStore.subjects.filter( subject => subject.id !== subjectId );
+
+        if ( stateStore.selectedSubject === subjectId ) {
+            stateStore.selectedSubject = -1;
+            stateStore.selectedSubtopic = -1;
+            stateStore.selectedChat = -1;
+
+            try {
+                localStorage.removeItem( 'sp-selected-subject' );
+                localStorage.removeItem( 'sp-selected-subtopic' );
+                localStorage.removeItem( 'sp-selected-chat' );
+            } catch { /* */ }
+        }
+
+        contextMenuSubject.value = null;
     };
 
     onMounted( async () => {
@@ -58,9 +101,12 @@
             <button
                 v-for="subject in stateStore.subjects"
                 :key="subject.id"
+                :aria-expanded="contextMenuSubject?.id === subject.id"
+                aria-haspopup="menu"
                 class="subject-folder"
                 type="button"
                 @click="toSubject( subject )"
+                @contextmenu.prevent.stop="openContextMenu( $event, subject )"
             >
                 <i class="subject-folder__icon mdi mdi-folder" aria-hidden="true"></i>
                 <span class="subject-folder__name">{{ subject.name }}</span>
@@ -74,6 +120,15 @@
                 <i class="subject-folder__icon mdi mdi-plus" aria-hidden="true"></i>
             </button>
         </div>
+
+        <SubjectContextMenu
+            v-if="contextMenuSubject"
+            :position="contextMenuPosition"
+            :subject="contextMenuSubject"
+            @close="contextMenuSubject = null"
+            @deleted="handleSubjectDeleted"
+            @renamed="handleSubjectRenamed"
+        />
 
         <CreateSubjectDialog v-model="isCreateDialogOpen" />
     </main>

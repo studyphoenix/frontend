@@ -1,6 +1,7 @@
 import type {
     ModelCreateSubjectRequest,
-    ModelSubject
+    ModelSubject,
+    ModelUpdateSubjectRequest
 } from '@/ts/types/api';
 import {
     request
@@ -24,6 +25,22 @@ export const createSubject = async ( payload: ModelCreateSubjectRequest ): Promi
     const response = await request.put( '/subjects/create', JSON.stringify( payload ) );
 
     return await readCreatedId( response );
+};
+
+export const updateSubject = async ( subjectId: number, payload: ModelUpdateSubjectRequest ): Promise<void> => {
+    const response = await request.patch( `/subjects/update/${ subjectId }`, JSON.stringify( payload ) );
+
+    if ( !response.ok ) {
+        throw new Error( `Failed to update subject (${ response.status })` );
+    }
+};
+
+export const deleteSubject = async ( subjectId: number ): Promise<void> => {
+    const response = await request.deleteRequest( `/subjects/delete/${ subjectId }` );
+
+    if ( !response.ok ) {
+        throw new Error( `Failed to delete subject (${ response.status })` );
+    }
 };
 
 export const associateAssetsToSubject = async ( subjectId: number, assetIds: number[] ): Promise<void> => {
