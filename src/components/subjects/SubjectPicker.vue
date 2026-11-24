@@ -3,13 +3,13 @@
         onMounted,
         ref
     } from 'vue';
+    import CreateSubjectDialog from '@/components/subjects/CreateSubjectDialog.vue';
     import type {
         ModelSubject
     } from '@/ts/types/api';
-    import router from '@/router';
-    import CreateSubjectDialog from '@/components/subjects/CreateSubjectDialog.vue';
-    import SubjectContextMenu from '@/components/subjects/SubjectContextMenu.vue';
     import SideBar from '@/components/SideBar.vue';
+    import SubjectContextMenu from '@/components/subjects/SubjectContextMenu.vue';
+    import router from '@/router';
     import {
         useStateStore
     } from '@/stores/statestore';
@@ -48,13 +48,18 @@
         };
     };
 
-    const handleSubjectRenamed = ( update: { 'id': number; 'name': string } ) => {
-        stateStore.subjects = stateStore.subjects.map( subject => subject.id === update.id
-            ? {
-                ...subject,
-                'name': update.name
-            }
-            : subject );
+    const handleSubjectRenamed = ( update: {
+        'id': number;
+        'name': string
+    } ) => {
+        stateStore.subjects = stateStore.subjects.map( subject => {
+            return subject.id === update.id
+                ? {
+                    ...subject,
+                    'name': update.name
+                }
+                : subject;
+        } );
         contextMenuSubject.value = null;
     };
 

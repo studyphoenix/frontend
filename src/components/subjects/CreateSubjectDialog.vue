@@ -1,5 +1,10 @@
 <script setup lang="ts">
     import {
+        assetsList,
+        openAssetManager,
+        showAssetManager
+    } from '@/composables/asset-manager';
+    import {
         onMounted,
         onUnmounted,
         ref,
@@ -7,16 +12,11 @@
     } from 'vue';
     import AssetManager from '@/components/assets/AssetManager.vue';
     import {
-        assetsList,
-        openAssetManager,
-        showAssetManager
-    } from '@/composables/asset-manager';
+        associateAssetsToSubject
+    } from '@/ts/util/subjects';
     import {
         useStateStore
     } from '@/stores/statestore';
-    import {
-        associateAssetsToSubject
-    } from '@/ts/util/subjects';
 
     const isOpen = defineModel<boolean>( {
         'default': false
