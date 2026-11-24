@@ -73,14 +73,14 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
         <v-sheet class="d-flex ga-2 position-sticky pa-2 bottom-0 border rounded-lg">
             <v-text-field
                 v-model="userMessage"
-                :disabled="canSend"
+                :disabled="!canSend"
                 rows="1"
                 autofocus
                 label="Ask Anything"
                 @keypress.enter="send"
             />
             <v-btn
-                :disabled="canSend"
+                :disabled="!canSend"
                 class="align-self-start"
                 icon="mdi-send"
                 width="56"
