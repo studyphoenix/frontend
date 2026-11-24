@@ -33,6 +33,7 @@
 
     let msgs: ModelChatMessage[]
         = [
+        /*
             {
                 'chatId': 0,
                 'id': 0,
@@ -53,6 +54,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
                 'summary': '',
                 'updatedAt': ''
             }
+            */
         ];
     /*
     const loadMsgs = ( chatId: number ) => {
