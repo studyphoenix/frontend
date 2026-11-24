@@ -98,27 +98,31 @@
         </p>
 
         <div v-if="!isLoading" class="subject-picker__grid">
-            <button
+            <v-btn
                 v-for="subject in stateStore.subjects"
                 :key="subject.id"
                 :aria-expanded="contextMenuSubject?.id === subject.id"
                 aria-haspopup="menu"
                 class="subject-folder"
+                block
                 type="button"
+                variant="outlined"
                 @click="toSubject( subject )"
                 @contextmenu.prevent.stop="openContextMenu( $event, subject )"
             >
                 <i class="subject-folder__icon mdi mdi-folder" aria-hidden="true"></i>
                 <span class="subject-folder__name">{{ subject.name }}</span>
-            </button>
-            <button
+            </v-btn>
+            <v-btn
                 aria-label="Add new subject"
                 class="subject-folder subject-folder--add"
+                block
                 type="button"
+                variant="outlined"
                 @click="openCreateDialog"
             >
                 <i class="subject-folder__icon mdi mdi-plus" aria-hidden="true"></i>
-            </button>
+            </v-btn>
         </div>
 
         <SubjectContextMenu

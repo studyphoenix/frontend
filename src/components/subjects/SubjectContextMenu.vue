@@ -156,14 +156,28 @@
         }"
         @pointerdown.stop
     >
-        <button type="button" role="menuitem" @click="openRenameDialog">
-            <i class="mdi mdi-pencil" aria-hidden="true"></i>
+        <v-btn
+            block
+            class="subject-context-menu__action"
+            prepend-icon="mdi-pencil"
+            role="menuitem"
+            type="button"
+            variant="text"
+            @click="openRenameDialog"
+        >
             Rename
-        </button>
-        <button type="button" role="menuitem" @click="openDeleteDialog">
-            <i class="mdi mdi-delete-outline" aria-hidden="true"></i>
+        </v-btn>
+        <v-btn
+            block
+            class="subject-context-menu__action"
+            prepend-icon="mdi-delete-outline"
+            role="menuitem"
+            type="button"
+            variant="text"
+            @click="openDeleteDialog"
+        >
             Delete
-        </button>
+        </v-btn>
     </div>
 
     <v-dialog v-model="isRenameDialogOpen" max-width="420">

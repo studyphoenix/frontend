@@ -25,9 +25,19 @@
     background: #fff;
     color: #000;
     font: inherit;
+    letter-spacing: normal;
     text-align: center;
+    text-transform: none;
     cursor: pointer;
     transition: background-color 0.3s;
+
+    .v-btn__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        white-space: normal;
+    }
 
     &:hover {
         background-color: #f0f0f0;

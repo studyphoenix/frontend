@@ -70,6 +70,7 @@
         if ( open ) {
             name.value = '';
             dialogError.value = null;
+            stateStore.subjectsError = null;
             selectedAssetIds.value = [];
             pendingSubjectId.value = null;
         }
