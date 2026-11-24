@@ -66,6 +66,26 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
         }
     }
     */
+    /*
+    const createMessage = ( chatId: number, modelMessage: string, userMessage: string ) => {
+        const data: ModelAddChatMessageRequest = {
+            "modelMessage": modelMessage
+        }
+        try {
+            return ( await ( await request.patch( `/chats/messages/add/${ chatId }`, JSON.stringify( data ) ) ).json() ).id;
+        } catch ( e ) {
+            console.error( e );
+            alert( 'Failed to load messages' ); // This needs to use some more elaborate component that probably exists already
+        }
+    }
+
+    const parseChatId = () => {
+        const start = location.search.substring( location.search.indexOf( 'id' ) + 3 );
+        return start.slice( 0, start.indexOf( '&' ) >= 0 ? start.indexOf( '&') : undefined );
+    }
+    */
+
+    // http://localhost:8081/test-chat/?id=0
 
 </script>
 
