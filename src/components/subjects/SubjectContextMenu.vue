@@ -1,5 +1,9 @@
 <script setup lang="ts">
     import {
+        deleteSubject,
+        updateSubject
+    } from '@/ts/util/subjects';
+    import {
         onMounted,
         onUnmounted,
         ref,
@@ -8,10 +12,6 @@
     import type {
         ModelSubject
     } from '@/ts/types/api';
-    import {
-        deleteSubject,
-        updateSubject
-    } from '@/ts/util/subjects';
 
     const props = defineProps<{
         'position': {
@@ -23,9 +23,11 @@
     const emit = defineEmits<{
         'close': [];
         'deleted': [subjectId: number];
-        'renamed': [update: { 'id': number; 'name': string }];
+        'renamed': [update: {
+            'id': number;
+            'name': string
+        }];
     }>();
-
     const contextMenuOpen = ref( true );
     const isRenameDialogOpen = ref( false );
     const isDeleteDialogOpen = ref( false );
@@ -168,7 +170,9 @@
 
     <v-dialog v-model="isRenameDialogOpen" max-width="420">
         <v-sheet class="subject-context-menu__dialog" rounded="lg">
-            <h2 class="subject-context-menu__dialog-title">Rename subject</h2>
+            <h2 class="subject-context-menu__dialog-title">
+                Rename subject
+            </h2>
             <v-alert
                 v-if="renameError"
                 class="mb-4"
@@ -212,7 +216,9 @@
 
     <v-dialog v-model="isDeleteDialogOpen" max-width="400">
         <v-sheet class="subject-context-menu__dialog" rounded="lg">
-            <h2 class="subject-context-menu__dialog-title">Delete subject?</h2>
+            <h2 class="subject-context-menu__dialog-title">
+                Delete subject?
+            </h2>
             <p class="text-body-2 text-medium-emphasis">
                 Delete "{{ props.subject.name }}"? This action cannot be undone.
             </p>

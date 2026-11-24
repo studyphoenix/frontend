@@ -1,11 +1,11 @@
 <script setup lang="ts">
-    import {
-        ref
-    } from 'vue';
     import ChatRenderer from '@/components/chat/ChatRenderer.vue';
     import type {
         ModelChatMessage
     } from '@/ts/types/api';
+    import {
+        ref
+    } from 'vue';
 
     let msgc = 2;
 
