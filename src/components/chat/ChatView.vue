@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import {
-        ref
+        ref,
+        type Ref
     } from 'vue';
     import ChatRenderer from '@/components/chat/ChatRenderer.vue';
     import type {
@@ -25,22 +26,21 @@
             let msg: ModelChatMessage
                 = {
                     'chatId': 0, // need to actually pick the right value
-                    'id': msgc++,
+                    'id': 0,
                     'userMessage': userMessage.value,
-                    'modelMessage': '',
+                    'modelMessage': 'insertmodelmessagehere',
                     'summary': '',
                     'updatedAt': ''
                 };
-
-            msgs.push( msg );
+            msg.id = await createMessage(props.id, msg.modelMessage, userMessage.value);
+            msgs.value.push( msg );
             userMessage.value = '';
             compKey.value++;
-            await createMessage(props.id, '', userMessage.value);
         }
     };
 
-    let msgs: ModelChatMessage[]
-        = [
+    const msgs: Ref<ModelChatMessage[]>
+        =ref( [
         /*
             {
                 'chatId': 0,
@@ -63,7 +63,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
                 'updatedAt': ''
             }
             */
-        ];
+        ] );
     const loadMsgs = async ( chatId: number ) => {
         try {
             msgs.value = (await ( await request.get( `/chats/get/${ chatId }` ) ).json()).chatMessages;
@@ -76,11 +76,11 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     const createMessage = async ( chatId: number, modelMessage: string, userMessage: string ) => {
         const data: ModelAddChatMessageRequest = {
             "modelMessage": modelMessage,
-            "summary": "",
+            "summary": "insertsummaryhere",
             "userMessage": userMessage
         }
         try {
-            return ( await ( await request.patch( `/chats/messages/add/${ chatId }`, JSON.stringify( data ) ) ).json() ).id;
+            return ( await ( await request.put( `/chats/messages/add/${ chatId }`, JSON.stringify( data ) ) ).json() ).id;
         } catch ( e ) {
             console.error( e );
             alert( 'Failed to create message' ); // This needs to use some more elaborate component that probably exists already
