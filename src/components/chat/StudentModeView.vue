@@ -386,7 +386,7 @@
             </div>
 
             <div class="chat-slot flex-grow-1 d-flex flex-column">
-                <ChatView />
+                <ChatView :id="chatId" />
             </div>
         </div>
     </div>

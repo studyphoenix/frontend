@@ -6,6 +6,13 @@
     import type {
         ModelChatMessage
     } from '@/ts/types/api';
+    import {
+    request
+    } from '@janishutz/oidc-login-sdk-browser';
+
+    const props = defineProps<{
+        'id': number;
+    }>();
 
     let msgc = 2;
 
@@ -13,7 +20,7 @@
     const compKey = ref( 0 );
     const userMessage = ref( '' );
 
-    const send = () => {
+    const send = async () => {
         if ( canSend.value ) {
             let msg: ModelChatMessage
                 = {
@@ -28,6 +35,7 @@
             msgs.push( msg );
             userMessage.value = '';
             compKey.value++;
+            await createMessage(props.id, '', userMessage.value);
         }
     };
 
@@ -56,29 +64,30 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
             }
             */
         ];
-    /*
-    const loadMsgs = ( chatId: number ) => {
+    const loadMsgs = async ( chatId: number ) => {
         try {
-            msgs.value = await ( await request.get( `/chats/get/${ chatId }` ) ).json();
-        } catch ( e ) {
-            console.error( e );
-            alert( 'Failed to load messages' ); // This needs to use some more elaborate component that probably exists already
-        }
-    }
-    */
-    /*
-    const createMessage = ( chatId: number, modelMessage: string, userMessage: string ) => {
-        const data: ModelAddChatMessageRequest = {
-            "modelMessage": modelMessage
-        }
-        try {
-            return ( await ( await request.patch( `/chats/messages/add/${ chatId }`, JSON.stringify( data ) ) ).json() ).id;
+            msgs.value = (await ( await request.get( `/chats/get/${ chatId }` ) ).json()).chatMessages;
         } catch ( e ) {
             console.error( e );
             alert( 'Failed to load messages' ); // This needs to use some more elaborate component that probably exists already
         }
     }
 
+    const createMessage = async ( chatId: number, modelMessage: string, userMessage: string ) => {
+        const data: ModelAddChatMessageRequest = {
+            "modelMessage": modelMessage,
+            "summary": "",
+            "userMessage": userMessage
+        }
+        try {
+            return ( await ( await request.patch( `/chats/messages/add/${ chatId }`, JSON.stringify( data ) ) ).json() ).id;
+        } catch ( e ) {
+            console.error( e );
+            alert( 'Failed to create message' ); // This needs to use some more elaborate component that probably exists already
+        }
+    }
+
+    /*
     const parseChatId = () => {
         const start = location.search.substring( location.search.indexOf( 'id' ) + 3 );
         return start.slice( 0, start.indexOf( '&' ) >= 0 ? start.indexOf( '&') : undefined );
@@ -86,13 +95,13 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     */
 
     // http://localhost:8081/test-chat/?id=0
-
+    loadMsgs(props.id);
 </script>
 
 <template>
     <v-container class="fill-height d-flex flex-column justify-center">
         <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" />
-        <v-sheet class="d-flex ga-2 position-sticky pa-2 bottom-0 border rounded-lg">
+        <v-sheet class="d-flex ga-2 pa-2 border rounded-lg" style="position: sticky; bottom: 0;">
             <v-text-field
                 v-model="userMessage"
                 :disabled="!canSend"
