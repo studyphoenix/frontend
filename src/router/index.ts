@@ -59,6 +59,24 @@ const router = createRouter( {
                 'title': 'Chat',
                 'auth': true
             }
+        },
+        {
+            'path': '/subjects',
+            'name': 'subject-picker',
+            'component': () => import( '@/components/subjects/SubjectPicker.vue' ),
+            'meta': {
+                'title': 'Subjects',
+                'auth': true
+            }
+        },
+        {
+            'path': '/test-chat',
+            'name': 'test-chat',
+            'component': () => import( '@/pages/ChatModePage.vue' ),
+            'meta': {
+                'title': 'Test Chat View',
+                'auth': true
+            }
         }
     ]
 } );

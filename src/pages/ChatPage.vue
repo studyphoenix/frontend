@@ -10,6 +10,7 @@
     } from '@/ts/types/api';
     import ProfessorModeView from '@/components/chat/ProfessorModeView.vue';
     import SideBar from '@/components/SideBar.vue';
+    import StudentModeView from '@/components/chat/StudentModeView.vue';
     import {
         getChatModeMeta
     } from '@/ts/util/chat-modes';
@@ -95,6 +96,11 @@
         <ProfessorModeView
             v-else-if="modeMeta.mode === 1"
             :chat="chat"
+            :chat-id="chatId"
+            :chat-name="displayName"
+        />
+        <StudentModeView
+            v-else-if="modeMeta.mode === 2"
             :chat-id="chatId"
             :chat-name="displayName"
         />

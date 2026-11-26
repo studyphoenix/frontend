@@ -1,0 +1,83 @@
+.subject-picker {
+        padding: 1.5rem;
+
+        &__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+            gap: 1rem;
+        }
+
+        &__error {
+            color: #b42318;
+        }
+    }
+
+.subject-folder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 9rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: #000;
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+        background-color: #f0f0f0;
+    }
+
+    &:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+
+    &--add {
+        border-style: dashed;
+
+        .subject-folder__icon {
+            color: #000;
+            font-size: 3rem;
+        }
+    }
+
+    &__icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    &__name {
+        font-weight: bold;
+        word-break: break-word;
+    }
+}
+
+.subject-picker {
+    &__upload-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    &__file-list {
+        margin: 0.75rem 0 0;
+        padding-left: 1.25rem;
+    }
+
+    &__hint {
+        margin-top: 0.75rem;
+    }
+
+    &__dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+}
