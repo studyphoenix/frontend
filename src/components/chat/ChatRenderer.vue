@@ -1,32 +1,11 @@
 <script setup lang="ts">
-    import { getCurrentInstance } from 'vue';
     import type {
         ModelChatMessage
     } from '@/ts/types/api';
-    import {
-    request
-    } from '@janishutz/oidc-login-sdk-browser';
 
     const props = defineProps<{
         'messages': ModelChatMessage[];
     }>();
-    const instance = getCurrentInstance();
-
-    const deleteMessage = async ( id: number ) => {
-        try {
-            return ( await request.deleteRequest( `/chats/messages/delete/${ id }`) );
-        } catch ( e ) {
-            console.error( e );
-            alert( 'Failed to delete message' ); // This needs to use some more elaborate component that probably exists already
-        }
-    }
-
-    const del = async (index: number) => {
-        let m: ModelChatMessage = props.messages[index];
-        await deleteMessage(m.id);
-        props.messages.splice(index, 1);
-        instance?.proxy?.$forceUpdate();
-    };
 </script>
 
 <template>
@@ -49,7 +28,7 @@
                     icon="mdi-trash-can"
                     width="24"
                     height="24"
-                    @click="del(index)"
+                    @click="this.$emit('del', index)"
                 />
                 <p>{{ x.userMessage }}</p>
             </v-sheet>

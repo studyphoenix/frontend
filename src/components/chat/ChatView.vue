@@ -3,10 +3,11 @@
         ref,
         type Ref
     } from 'vue';
-    import ChatRenderer from '@/components/chat/ChatRenderer.vue';
     import type {
+        ModelAddChatMessageRequest,
         ModelChatMessage
     } from '@/ts/types/api';
+    import ChatRenderer from '@/components/chat/ChatRenderer.vue';
     import {
     request
     } from '@janishutz/oidc-login-sdk-browser';
@@ -14,8 +15,6 @@
     const props = defineProps<{
         'id': number;
     }>();
-
-    let msgc = 2;
 
     const canSend = ref( true );
     const compKey = ref( 0 );
@@ -87,6 +86,22 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
         }
     }
 
+    const deleteMessage = async ( id: number ) => {
+        try {
+            return ( await request.deleteRequest( `/chats/messages/delete/${ id }`) );
+        } catch ( e ) {
+            console.error( e );
+            alert( 'Failed to delete message' ); // This needs to use some more elaborate component that probably exists already
+        }
+    }
+
+    const del = async (index: number) => {
+        let m: ModelChatMessage = msgs.value[index];
+        await deleteMessage(m.id);
+        msgs.value.splice(index, 1);
+        compKey.value++;
+    };
+
     /*
     const parseChatId = () => {
         const start = location.search.substring( location.search.indexOf( 'id' ) + 3 );
@@ -100,7 +115,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 
 <template>
     <v-container class="fill-height d-flex flex-column justify-center">
-        <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" />
+        <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" @del="del"/>
         <v-sheet class="d-flex ga-2 pa-2 border rounded-lg" style="position: sticky; bottom: 0;">
             <v-text-field
                 v-model="userMessage"
