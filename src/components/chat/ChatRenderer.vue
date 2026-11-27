@@ -28,7 +28,7 @@
                     icon="mdi-trash-can"
                     width="24"
                     height="24"
-                    @click="this.$emit('del', index)"
+                    @click="$emit('del', index)"
                 />
                 <p>{{ x.userMessage }}</p>
             </v-sheet>

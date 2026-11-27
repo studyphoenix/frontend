@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import {
-        ref,
-        type Ref
+        type Ref,
+        ref
     } from 'vue';
     import type {
         ModelAddChatMessageRequest,
@@ -9,7 +9,7 @@
     } from '@/ts/types/api';
     import ChatRenderer from '@/components/chat/ChatRenderer.vue';
     import {
-    request
+        request
     } from '@janishutz/oidc-login-sdk-browser';
 
     const props = defineProps<{
@@ -17,9 +17,10 @@
     }>();
 
     let id: number = 0;
-    if (props.chatId === null) {
+
+    if ( props.chatId === null ) {
         id = -1;
-        alert('chatid can not be null')
+        alert( 'chatid can not be null' );
     } else {
         id = props.chatId;
     }
@@ -39,7 +40,8 @@
                     'summary': '',
                     'updatedAt': ''
                 };
-            msg.id = await createMessage(id, msg.modelMessage, userMessage.value);
+
+            msg.id = await createMessage( id, msg.modelMessage, userMessage.value );
             msgs.value.push( msg );
             userMessage.value = '';
             compKey.value++;
@@ -47,7 +49,7 @@
     };
 
     const msgs: Ref<ModelChatMessage[]>
-        =ref( [
+        = ref( [
         /*
             {
                 'chatId': 0,
@@ -71,42 +73,45 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
             }
             */
         ] );
+
     const loadMsgs = async ( chatId: number ) => {
         try {
-            msgs.value = (await ( await request.get( `/chats/get/${ chatId }` ) ).json()).chatMessages;
+            msgs.value = ( await ( await request.get( `/chats/get/${ chatId }` ) ).json() ).chatMessages;
         } catch ( e ) {
             console.error( e );
             alert( 'Failed to load messages' ); // This needs to use some more elaborate component that probably exists already
         }
-    }
+    };
 
     const createMessage = async ( chatId: number, modelMessage: string, userMessage: string ) => {
         const data: ModelAddChatMessageRequest = {
-            "modelMessage": modelMessage,
-            "summary": "insertsummaryhere",
-            "userMessage": userMessage
-        }
+            'modelMessage': modelMessage,
+            'summary': 'insertsummaryhere',
+            'userMessage': userMessage
+        };
+
         try {
             return ( await ( await request.put( `/chats/messages/add/${ chatId }`, JSON.stringify( data ) ) ).json() ).id;
         } catch ( e ) {
             console.error( e );
             alert( 'Failed to create message' ); // This needs to use some more elaborate component that probably exists already
         }
-    }
+    };
 
     const deleteMessage = async ( id: number ) => {
         try {
-            return ( await request.deleteRequest( `/chats/messages/delete/${ id }`) );
+            return await request.deleteRequest( `/chats/messages/delete/${ id }` );
         } catch ( e ) {
             console.error( e );
             alert( 'Failed to delete message' ); // This needs to use some more elaborate component that probably exists already
         }
-    }
+    };
 
-    const del = async (index: number) => {
+    const del = async ( index: number ) => {
         let m: ModelChatMessage = msgs.value[index];
-        await deleteMessage(m.id);
-        msgs.value.splice(index, 1);
+
+        await deleteMessage( m.id );
+        msgs.value.splice( index, 1 );
         compKey.value++;
     };
 
@@ -118,12 +123,17 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     */
 
     // http://localhost:8081/test-chat/?id=0
-    loadMsgs(id);
+    loadMsgs( id );
 </script>
 
 <template>
     <v-container class="fill-height d-flex flex-column justify-center">
-        <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" @del="del"/>
+        <ChatRenderer
+            :key="compKey"
+            class="h-100 flex-column d-flex text-body-large"
+            :messages="msgs"
+            @del="del"
+        />
         <v-sheet class="d-flex ga-2 pa-2 border rounded-lg" style="position: sticky; bottom: 0;">
             <v-text-field
                 v-model="userMessage"
