@@ -21,7 +21,7 @@
         id = -1;
         alert('chatid can not be null')
     } else {
-        id = chatId;
+        id = props.chatId;
     }
 
     const canSend = ref( true );
