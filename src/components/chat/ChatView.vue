@@ -13,8 +13,16 @@
     } from '@janishutz/oidc-login-sdk-browser';
 
     const props = defineProps<{
-        'id': number;
+        'chatId': number | null;
     }>();
+
+    let id: number = 0;
+    if (props.chatId === null) {
+        id = -1;
+        alert('chatid can not be null')
+    } else {
+        id = chatId;
+    }
 
     const canSend = ref( true );
     const compKey = ref( 0 );
@@ -31,7 +39,7 @@
                     'summary': '',
                     'updatedAt': ''
                 };
-            msg.id = await createMessage(props.id, msg.modelMessage, userMessage.value);
+            msg.id = await createMessage(id, msg.modelMessage, userMessage.value);
             msgs.value.push( msg );
             userMessage.value = '';
             compKey.value++;
@@ -110,7 +118,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     */
 
     // http://localhost:8081/test-chat/?id=0
-    loadMsgs(props.id);
+    loadMsgs(id);
 </script>
 
 <template>

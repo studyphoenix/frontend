@@ -13,7 +13,7 @@
     }
 
     const props = defineProps<{
-        'chatId': number;
+        'chatId': number | null;
         'chatName': string;
     }>();
     const DEFAULT_DECK: FlashcardItem[] = [
