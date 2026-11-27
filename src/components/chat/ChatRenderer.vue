@@ -27,11 +27,6 @@
         props.messages.splice(index, 1);
         instance?.proxy?.$forceUpdate();
     };
-
-    let viewDelete: boolean[] = [];
-    for (let m in props.messages) {
-        viewDelete.push(false);
-    }
 </script>
 
 <template>
@@ -47,11 +42,9 @@
                 style="word-wrap: break-word;"
                 max-width="80ch"
                 color="primary"
-                v-on:mouseenter="viewDelete[index] = true"
-                v-on:mouseleave="viewDelete[index] = false"
             >
                 <v-btn
-                    class=""
+                    class="ma-n4 position-absolute"
                     color="secondary"
                     icon="mdi-trash-can"
                     width="24"
