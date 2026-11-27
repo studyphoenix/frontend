@@ -13,7 +13,7 @@
     } from '@janishutz/oidc-login-sdk-browser';
 
     const props = defineProps<{
-        'id': number;
+        'id': number | null;
     }>();
 
     const canSend = ref( true );
