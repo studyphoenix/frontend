@@ -6,6 +6,6 @@
 <template>
     <v-container class="fill-height d-flex flex-column justify-center">
         <SideBar />
-        <ChatView :id="1" />
+        <ChatView :chatId="1" />
     </v-container>
 </template>
