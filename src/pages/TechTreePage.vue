@@ -9,7 +9,7 @@
         ref,
         watch
     } from 'vue';
-    import CreateSubjectDialog from '@/components/techtree/CreateSubjectDialog.vue';
+    import CreateSubjectDialog from '@/components/subjects/CreateSubjectDialog.vue';
     import GenerateTechTreeDialog from '@/components/techtree/GenerateTechTreeDialog.vue';
     import type {
         ModelSubtopic
