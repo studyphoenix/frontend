@@ -1,38 +1,56 @@
 <script setup lang="ts">
     import {
+        type Ref,
         ref
     } from 'vue';
-    import ChatRenderer from '@/components/chat/ChatRenderer.vue';
     import type {
+        ModelAddChatMessageRequest,
         ModelChatMessage
     } from '@/ts/types/api';
+    import ChatRenderer from '@/components/chat/ChatRenderer.vue';
+    import {
+        request
+    } from '@janishutz/oidc-login-sdk-browser';
 
-    let msgc = 2;
+    const props = defineProps<{
+        'chatId': number | null;
+    }>();
+
+    let id: number = 0;
+
+    if ( props.chatId === null ) {
+        id = -1;
+        alert( 'chatid can not be null' );
+    } else {
+        id = props.chatId;
+    }
 
     const canSend = ref( true );
     const compKey = ref( 0 );
     const userMessage = ref( '' );
 
-    const send = () => {
+    const send = async () => {
         if ( canSend.value ) {
             let msg: ModelChatMessage
                 = {
                     'chatId': 0, // need to actually pick the right value
-                    'id': msgc++,
+                    'id': 0,
                     'userMessage': userMessage.value,
-                    'modelMessage': '',
+                    'modelMessage': 'insertmodelmessagehere',
                     'summary': '',
                     'updatedAt': ''
                 };
 
-            msgs.push( msg );
+            msg.id = await createMessage( id, msg.modelMessage, userMessage.value );
+            msgs.value.push( msg );
             userMessage.value = '';
             compKey.value++;
         }
     };
 
-    let msgs: ModelChatMessage[]
-        = [
+    const msgs: Ref<ModelChatMessage[]>
+        = ref( [
+        /*
             {
                 'chatId': 0,
                 'id': 0,
@@ -53,24 +71,70 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
                 'summary': '',
                 'updatedAt': ''
             }
-        ];
-    /*
-    const loadMsgs = ( chatId: number ) => {
+            */
+        ] );
+
+    const loadMsgs = async ( chatId: number ) => {
         try {
-            msgs.value = await ( await request.get( `/chats/get/${ chatId }` ) ).json();
+            msgs.value = ( await ( await request.get( `/chats/get/${ chatId }` ) ).json() ).chatMessages;
         } catch ( e ) {
             console.error( e );
             alert( 'Failed to load messages' ); // This needs to use some more elaborate component that probably exists already
         }
+    };
+
+    const createMessage = async ( chatId: number, modelMessage: string, userMessage: string ) => {
+        const data: ModelAddChatMessageRequest = {
+            'modelMessage': modelMessage,
+            'summary': 'insertsummaryhere',
+            'userMessage': userMessage
+        };
+
+        try {
+            return ( await ( await request.put( `/chats/messages/add/${ chatId }`, JSON.stringify( data ) ) ).json() ).id;
+        } catch ( e ) {
+            console.error( e );
+            alert( 'Failed to create message' ); // This needs to use some more elaborate component that probably exists already
+        }
+    };
+
+    const deleteMessage = async ( id: number ) => {
+        try {
+            return await request.deleteRequest( `/chats/messages/delete/${ id }` );
+        } catch ( e ) {
+            console.error( e );
+            alert( 'Failed to delete message' ); // This needs to use some more elaborate component that probably exists already
+        }
+    };
+
+    const del = async ( index: number ) => {
+        let m: ModelChatMessage = msgs.value[index];
+
+        await deleteMessage( m.id );
+        msgs.value.splice( index, 1 );
+        compKey.value++;
+    };
+
+    /*
+    const parseChatId = () => {
+        const start = location.search.substring( location.search.indexOf( 'id' ) + 3 );
+        return start.slice( 0, start.indexOf( '&' ) >= 0 ? start.indexOf( '&') : undefined );
     }
     */
 
+    // http://localhost:8081/test-chat/?id=0
+    loadMsgs( id );
 </script>
 
 <template>
     <v-container class="fill-height d-flex flex-column justify-center">
-        <ChatRenderer :key="compKey" class="h-100 flex-column d-flex text-body-large" :messages="msgs" />
-        <v-sheet class="d-flex ga-2 position-sticky pa-2 bottom-0 border rounded-lg">
+        <ChatRenderer
+            :key="compKey"
+            class="h-100 flex-column d-flex text-body-large"
+            :messages="msgs"
+            @del="del"
+        />
+        <v-sheet class="d-flex ga-2 pa-2 border rounded-lg" style="position: sticky; bottom: 0;">
             <v-text-field
                 v-model="userMessage"
                 :disabled="!canSend"

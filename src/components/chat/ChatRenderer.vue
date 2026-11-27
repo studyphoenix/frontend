@@ -3,8 +3,6 @@
         ModelChatMessage
     } from '@/ts/types/api';
 
-    // a useless comment (which I had to commit so that the eslint checker would work)
-    // a useless comment (which I had to commit so that the eslint checker would work)
     const props = defineProps<{
         'messages': ModelChatMessage[];
     }>();
@@ -13,7 +11,7 @@
 <template>
     <div class="d-flex flex-column">
         <div
-            v-for="x in props.messages"
+            v-for="(x, index) in props.messages"
             :key="x.id"
             class="d-flex flex-column"
             :value="[x.userMessage, x.modelMessage, x.updatedAt, x.summary]"
@@ -24,6 +22,14 @@
                 max-width="80ch"
                 color="primary"
             >
+                <v-btn
+                    class="ma-n4 position-absolute"
+                    color="secondary"
+                    icon="mdi-trash-can"
+                    width="24"
+                    height="24"
+                    @click="$emit('del', index)"
+                />
                 <p>{{ x.userMessage }}</p>
             </v-sheet>
             <v-sheet

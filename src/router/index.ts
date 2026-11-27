@@ -72,7 +72,7 @@ const router = createRouter( {
         {
             'path': '/test-chat',
             'name': 'test-chat',
-            'component': () => import( '@/pages/ChatModePage.vue' ),
+            'component': () => import( '@/pages/TestChatPage.vue' ),
             'meta': {
                 'title': 'Test Chat View',
                 'auth': true
