@@ -6,6 +6,7 @@
     const props = defineProps<{
         'messages': ModelChatMessage[];
     }>();
+    defineEmits('del');
 </script>
 
 <template>

@@ -16,15 +16,6 @@
         'chatId': number | null;
     }>();
 
-    let id: number = 0;
-
-    if ( props.chatId === null ) {
-        id = -1;
-        alert( 'chatid can not be null' );
-    } else {
-        id = props.chatId;
-    }
-
     const canSend = ref( true );
     const compKey = ref( 0 );
     const userMessage = ref( '' );
@@ -41,7 +32,7 @@
                     'updatedAt': ''
                 };
 
-            msg.id = await createMessage( id, msg.modelMessage, userMessage.value );
+            msg.id = await createMessage( props.chatId, msg.modelMessage, userMessage.value );
             msgs.value.push( msg );
             userMessage.value = '';
             compKey.value++;
@@ -115,15 +106,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
         compKey.value++;
     };
 
-    /*
-    const parseChatId = () => {
-        const start = location.search.substring( location.search.indexOf( 'id' ) + 3 );
-        return start.slice( 0, start.indexOf( '&' ) >= 0 ? start.indexOf( '&') : undefined );
-    }
-    */
-
-    // http://localhost:8081/test-chat/?id=0
-    loadMsgs( id );
+    loadMsgs( props.chatId );
 </script>
 
 <template>
